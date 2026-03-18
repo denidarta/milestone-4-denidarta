@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountsService } from '../accounts/accounts.service';
@@ -12,9 +16,10 @@ export class TransactionsService {
   ) {}
 
   async create(accountId: string, userId: string, dto: CreateTransactionDto) {
-    const balanceDelta = dto.type === TransactionType.CREDIT
-      ? new Prisma.Decimal(dto.amount)
-      : new Prisma.Decimal(dto.amount).negated();
+    const balanceDelta =
+      dto.type === TransactionType.CREDIT
+        ? new Prisma.Decimal(dto.amount)
+        : new Prisma.Decimal(dto.amount).negated();
 
     return this.prisma.$transaction(async (tx) => {
       const account = await tx.account.findUnique({ where: { id: accountId } });
@@ -22,7 +27,12 @@ export class TransactionsService {
       if (account.userId !== userId) throw new ForbiddenException();
 
       const transaction = await tx.transaction.create({
-        data: { accountId, amount: dto.amount, type: dto.type, description: dto.description },
+        data: {
+          accountId,
+          amount: dto.amount,
+          type: dto.type,
+          description: dto.description,
+        },
       });
       await tx.account.update({
         where: { id: accountId },
@@ -36,7 +46,12 @@ export class TransactionsService {
     await this.accounts.findOne(accountId, userId);
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.prisma.transaction.findMany({ where: { accountId }, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.transaction.findMany({
+        where: { accountId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
       this.prisma.transaction.count({ where: { accountId } }),
     ]);
     return { data, total, page, limit };

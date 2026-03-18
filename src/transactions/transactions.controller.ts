@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -24,7 +33,12 @@ export class TransactionsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.transactions.findAll(accountId, req.user.userId, Number(page) || 1, Number(limit) || 20);
+    return this.transactions.findAll(
+      accountId,
+      req.user.userId,
+      Number(page) || 1,
+      Number(limit) || 20,
+    );
   }
 
   @Get('transactions/:id')

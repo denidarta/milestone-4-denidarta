@@ -14,7 +14,9 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     prisma = app.get(PrismaService);
     await app.init();
   });
@@ -28,7 +30,11 @@ describe('Auth (e2e)', () => {
     it('should register a new user and return a token', async () => {
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'test@example.com', password: 'password123', name: 'Test User' });
+        .send({
+          email: 'test@example.com',
+          password: 'password123',
+          name: 'Test User',
+        });
       expect(res.status).toBe(201);
       expect(res.body.access_token).toBeDefined();
     });
@@ -36,7 +42,11 @@ describe('Auth (e2e)', () => {
     it('should return 409 for duplicate email', async () => {
       const res = await request(app.getHttpServer())
         .post('/auth/register')
-        .send({ email: 'test@example.com', password: 'password123', name: 'Test User' });
+        .send({
+          email: 'test@example.com',
+          password: 'password123',
+          name: 'Test User',
+        });
       expect(res.status).toBe(409);
     });
 

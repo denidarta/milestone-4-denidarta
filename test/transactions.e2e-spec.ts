@@ -17,13 +17,17 @@ describe('Transactions (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     prisma = app.get(PrismaService);
     await app.init();
 
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'tx@example.com', password: 'password123', name: 'TX User' });
+    await request(app.getHttpServer()).post('/auth/register').send({
+      email: 'tx@example.com',
+      password: 'password123',
+      name: 'TX User',
+    });
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'tx@example.com', password: 'password123' });
@@ -47,7 +51,11 @@ describe('Transactions (e2e)', () => {
     const res = await request(app.getHttpServer())
       .post(`/accounts/${accountId}/transactions`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ amount: '500.00', type: 'CREDIT', description: 'Initial deposit' });
+      .send({
+        amount: '500.00',
+        type: 'CREDIT',
+        description: 'Initial deposit',
+      });
     expect(res.status).toBe(201);
     expect(res.body.id).toBeDefined();
     transactionId = res.body.id;
@@ -94,9 +102,11 @@ describe('Transactions (e2e)', () => {
   });
 
   it('GET /transactions/:id - returns 403 for transaction owned by another user', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'txother@example.com', password: 'password123', name: 'Other User' });
+    await request(app.getHttpServer()).post('/auth/register').send({
+      email: 'txother@example.com',
+      password: 'password123',
+      name: 'Other User',
+    });
     const otherRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'txother@example.com', password: 'password123' });

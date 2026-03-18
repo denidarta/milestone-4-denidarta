@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -19,7 +29,11 @@ export class AccountsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.accounts.findAll(req.user.userId, Number(page) || 1, Number(limit) || 20);
+    return this.accounts.findAll(
+      req.user.userId,
+      Number(page) || 1,
+      Number(limit) || 20,
+    );
   }
 
   @Get(':id')

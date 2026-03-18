@@ -16,14 +16,18 @@ describe('Accounts (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     prisma = app.get(PrismaService);
     await app.init();
 
     // Register and login
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'accounts@example.com', password: 'password123', name: 'Account User' });
+    await request(app.getHttpServer()).post('/auth/register').send({
+      email: 'accounts@example.com',
+      password: 'password123',
+      name: 'Account User',
+    });
     const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'accounts@example.com', password: 'password123' });
@@ -71,9 +75,11 @@ describe('Accounts (e2e)', () => {
 
   it('GET /accounts/:id - returns 403 for account owned by another user', async () => {
     // Register a second user
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ email: 'other@example.com', password: 'password123', name: 'Other User' });
+    await request(app.getHttpServer()).post('/auth/register').send({
+      email: 'other@example.com',
+      password: 'password123',
+      name: 'Other User',
+    });
     const otherRes = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'other@example.com', password: 'password123' });

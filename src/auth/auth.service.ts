@@ -34,9 +34,8 @@ export class AuthService {
     return this.signToken(user.id, user.email);
   }
 
-  private signToken(userId: string, email: string) {
-    return this.jwt.signAsync(
-      { sub: userId, email },
-    ).then((access_token) => ({ access_token }));
+  private async signToken(userId: string, email: string): Promise<{ access_token: string }> {
+    const access_token = await this.jwt.signAsync({ sub: userId, email });
+    return { access_token };
   }
 }

@@ -64,4 +64,29 @@ describe('Auth (e2e)', () => {
       expect(res.status).toBe(401);
     });
   });
+
+  describe('GET /users/me', () => {
+    let token: string;
+
+    beforeAll(async () => {
+      const res = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'test@example.com', password: 'password123' });
+      token = res.body.access_token;
+    });
+
+    it('should return current user profile', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/users/me')
+        .set('Authorization', `Bearer ${token}`);
+      expect(res.status).toBe(200);
+      expect(res.body.email).toBe('test@example.com');
+      expect(res.body.password).toBeUndefined();
+    });
+
+    it('should return 401 without token', async () => {
+      const res = await request(app.getHttpServer()).get('/users/me');
+      expect(res.status).toBe(401);
+    });
+  });
 });

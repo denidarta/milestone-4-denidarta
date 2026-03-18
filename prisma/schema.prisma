@@ -4,12 +4,17 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum AccountType {
   CHECKING
   SAVINGS
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
 }
 
 enum TransactionType {
@@ -31,6 +36,7 @@ model Account {
   id           String          @id @default(uuid())
   name         String
   type         AccountType
+  status       AccountStatus   @default(ACTIVE)
   balance      Decimal         @default(0) @db.Decimal(19, 4)
   currency     String          @default("USD")
   createdAt    DateTime        @default(now())

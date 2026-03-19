@@ -1,40 +1,40 @@
 import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 
 @Injectable()
 export class AccountsService {
-  constructor(private prisma: PrismaService) {}
+	constructor(private prisma: PrismaService) {}
 
-  create(userId: string, dto: CreateAccountDto) {
-    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
-    return this.prisma.account.create({
-      data: { ...dto, userId, accountNumber },
-    });
-  }
+	create(userId: string, dto: CreateAccountDto) {
+		const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
+		return this.prisma.account.create({
+			data: { ...dto, userId, accountNumber },
+		});
+	}
 
-  async findAll(userId: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.prisma.account.findMany({ where: { userId }, skip, take: limit }),
-      this.prisma.account.count({ where: { userId } }),
-    ]);
-    return { data, total, page, limit };
-  }
+	async findAll(userId: string, page = 1, limit = 20) {
+		const skip = (page - 1) * limit;
+		const [data, total] = await Promise.all([
+			this.prisma.account.findMany({ where: { userId }, skip, take: limit }),
+			this.prisma.account.count({ where: { userId } }),
+		]);
+		return { data, total, page, limit };
+	}
 
-  async findOne(id: string, userId: string) {
-    const account = await this.prisma.account.findUnique({ where: { id } });
-    if (!account) throw new NotFoundException('Account not found');
-    if (account.userId !== userId) throw new ForbiddenException();
-    return account;
-  }
+	async findOne(id: string, userId: string) {
+		const account = await this.prisma.account.findUnique({ where: { id } });
+		if (!account) throw new NotFoundException('Account not found');
+		if (account.userId !== userId) throw new ForbiddenException();
+		return account;
+	}
 
-  async remove(id: string, userId: string) {
-    await this.findOne(id, userId);
-    return this.prisma.account.delete({ where: { id } });
-  }
+	async remove(id: string, userId: string) {
+		await this.findOne(id, userId);
+		return this.prisma.account.delete({ where: { id } });
+	}
 }

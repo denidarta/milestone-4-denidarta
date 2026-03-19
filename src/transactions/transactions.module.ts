@@ -4,8 +4,8 @@ import { TransactionsController } from './transactions.controller';
 import { AccountsModule } from '../accounts/accounts.module';
 
 @Module({
-  imports: [AccountsModule],
-  providers: [TransactionsService],
-  controllers: [TransactionsController],
+	imports: [AccountsModule],
+	providers: [TransactionsService],
+	controllers: [TransactionsController],
 })
 export class TransactionsModule {}

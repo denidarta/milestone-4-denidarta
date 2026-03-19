@@ -3,12 +3,12 @@ import { Request } from 'express';
 import { User } from 'src/types/UserResponse';
 
 export interface RequestWithUser extends Request {
-  user: User;
+	user: User;
 }
 
 export const CurrentUser = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): User => {
-    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
-    return request.user;
-  },
+	(data: unknown, ctx: ExecutionContext): User => {
+		const request = ctx.switchToHttp().getRequest<RequestWithUser>();
+		return request.user;
+	},
 );

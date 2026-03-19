@@ -7,13 +7,13 @@ import { AccountsModule } from './accounts/accounts.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    PrismaModule,
-    AuthModule,
-    UsersModule,
-    AccountsModule,
-    TransactionsModule,
-  ],
+	imports: [
+		ConfigModule.forRoot({ isGlobal: true }),
+		PrismaModule,
+		AuthModule,
+		UsersModule,
+		AccountsModule,
+		TransactionsModule,
+	],
 })
 export class AppModule {}

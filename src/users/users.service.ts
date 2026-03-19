@@ -6,17 +6,19 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
-  findById(id: string) {
-    return this.usersRepository.findById(id);
-  }
-  update(id: string, data: UpdateUserDto) {
-    return this.usersRepository.update(id, data);
-  }
-  async delete(id: string) {
+  async findById(id: string) {
     const user = await this.usersRepository.findById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    return user;
+  }
+  async update(id: string, data: UpdateUserDto) {
+    await this.findById(id);
+    return this.usersRepository.update(id, data);
+  }
+  async delete(id: string) {
+    await this.findById(id);
     return this.usersRepository.delete(id);
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -34,5 +35,18 @@ export class UsersController {
       throw new ForbiddenException('Forbidden Access');
     }
     return this.users.update(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  delete(
+    @Param('id') id: string,
+    @Request() req: { user: { role: UserRole } },
+  ) {
+    if (req.user.role !== UserRole.ADMIN)
+      throw new ForbiddenException(
+        'You are not allowed to perform this action!',
+      );
+    return this.users.delete(id);
   }
 }

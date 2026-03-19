@@ -12,4 +12,7 @@ export class UsersService {
   update(id: string, data: UpdateUserDto) {
     return this.usersRepository.update(id, data);
   }
+  delete(id: string) {
+    return this.usersRepository.delete(id);
+  }
 }

@@ -55,4 +55,7 @@ export class UsersRepository {
   update(id: string, data: UpdateUserDto) {
     return this.prisma.user.update({ where: { id }, data });
   }
+  delete(id: string) {
+    return this.prisma.user.delete({ where: { id } });
+  }
 }

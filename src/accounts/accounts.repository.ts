@@ -10,14 +10,25 @@ export class AccountsRepository {
 			select: {
 				id: true,
 				accountNumber: true,
-				name: true,
+				balance: true,
 				createdAt: true,
 				updatedAt: true,
 			},
 		});
 	}
 
-	finById() {}
+	finById(id: string) {
+		return this.prisma.account.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				accountNumber: true,
+				balance: true,
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
+	}
 	findByNumber() {}
 	create() {}
 	// Only update account status is allowed.

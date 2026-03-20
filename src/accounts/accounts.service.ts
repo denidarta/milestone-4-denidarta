@@ -10,10 +10,17 @@ import { CreateAccountDto } from './dto/create-account.dto';
 export class AccountsService {
 	constructor(private prisma: PrismaService) {}
 
-	create(userId: string, dto: CreateAccountDto) {
-		const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
+	async create(userId: string, dto: CreateAccountDto) {
+		let accountNumber: number;
+		let exist = true;
+		while (exist) {
+			accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
+			exist = !!(await this.prisma.account.findUnique({
+				where: { accountNumber },
+			}));
+		}
 		return this.prisma.account.create({
-			data: { ...dto, userId, accountNumber },
+			data: { ...dto, userId },
 		});
 	}
 
@@ -26,15 +33,24 @@ export class AccountsService {
 		return { data, total, page, limit };
 	}
 
-	async findById(id: string, userId: string) {
+	async findById(id: string) {
 		const account = await this.prisma.account.findUnique({ where: { id } });
 		if (!account) throw new NotFoundException('Account not found');
-		if (account.userId !== userId) throw new ForbiddenException();
 		return account;
 	}
 
-	async remove(id: string, userId: string) {
-		await this.findById(id, userId);
+	async findByAccountNumber(accountNumber: number) {
+		return this.prisma.account.findUnique({
+			where: { accountNumber },
+		});
+	}
+
+	async update(id: string) {
+		await this.findById(id);
+	}
+
+	async remove(id: string) {
+		await this.findById(id);
 		return this.prisma.account.delete({ where: { id } });
 	}
 }

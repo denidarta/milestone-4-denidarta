@@ -1,12 +1,14 @@
-import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Decimal } from '@prisma/client/runtime/client';
 import { TransactionType } from '@prisma/client';
 
 export class CreateTransactionDto {
-	@Matches(/^\d+(\.\d+)?$/, {
-		message: 'amount must be a positive number',
-	})
-	amount: string;
+	@Transform(({ value }: { value: string }) => new Decimal(value))
+	@IsNotEmpty()
+	amount: Decimal;
 
+	@IsNotEmpty()
 	@IsEnum(TransactionType)
 	type: TransactionType;
 

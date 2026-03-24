@@ -6,30 +6,39 @@ import {
 	HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { ApiResponse } from 'src/types/api-response.interface';
+
+interface HttpExceptionResponse {
+	message: string | string[];
+	error: string;
+	statusCode: number;
+}
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
 	catch(exception: unknown, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse<Response>();
-		const request = ctx.getRequest<Request>();
 
 		const status =
 			exception instanceof HttpException
 				? exception.getStatus()
 				: HttpStatus.INTERNAL_SERVER_ERROR;
 
-		const message =
-			exception instanceof HttpException
-				? ((exception.getResponse() as { message?: string | string[] })
-						.message ?? exception.message)
-				: 'Internal server error';
+		let message: string | string[] = 'Internal server error';
 
-		response.status(status).json({
-			statusCode: status,
-			message,
-			path: request.url,
-			timestamp: new Date().toISOString(),
-		});
+		if (exception instanceof HttpException) {
+			const errorResponse = exception.getResponse();
+			message =
+				(errorResponse as HttpExceptionResponse).message || exception.message;
+		}
+
+		const apiResponse: ApiResponse<null> = {
+			status,
+			message: Array.isArray(message) ? message.join(', ') : message,
+			data: null,
+		};
+
+		response.status(status).json(apiResponse);
 	}
 }

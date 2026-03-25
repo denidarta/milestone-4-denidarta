@@ -14,7 +14,7 @@ export class TransactionsRepository {
 					type: dto.type,
 					description: dto.description,
 					sourceAccountId: dto.sourceAccountId,
-					destinationAccountId: dto.destinaionAccountId,
+					destinationAccountId: dto.destinationAccountId,
 				},
 			});
 
@@ -25,9 +25,9 @@ export class TransactionsRepository {
 				});
 			}
 
-			if (dto.destinaionAccountId) {
+			if (dto.destinationAccountId) {
 				await trx.account.update({
-					where: { id: dto.destinaionAccountId },
+					where: { id: dto.destinationAccountId },
 					data: { balance: { increment: dto.amount } },
 				});
 			}

@@ -19,6 +19,16 @@ export class UsersController {
 	constructor(private users: UsersService) {}
 
 	@UseGuards(JwtAuthGuard)
+	@Get()
+	findAll(@Request() req: { user: { role: UserRole } }) {
+		if (req.user.role !== UserRole.ADMIN)
+			throw new ForbiddenException(
+				'You are not allowed to perform this action!'
+			);
+		return this.users.findAll();
+	}
+
+	@UseGuards(JwtAuthGuard)
 	@Get('me')
 	getMe(@Request() req: { user: { userId: string } }) {
 		return this.users.findById(req.user.userId);

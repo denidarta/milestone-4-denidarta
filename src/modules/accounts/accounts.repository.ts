@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 
@@ -9,6 +9,7 @@ const selectedData = {
 	balance: true,
 	createdAt: true,
 	updatedAt: true,
+	userId: true,
 } as const;
 
 @Injectable()
@@ -19,11 +20,16 @@ export class AccountsRepository {
 		return this.prisma.account.create({ data: { ...dto, userId } });
 	}
 
-	findAllByUser(userId: string) {
-		return this.prisma.account.findMany({
-			where: { userId },
-			select: selectedData,
-		});
+	findAllByUser(userId: string, skip: number, take: number) {
+		return Promise.all([
+			this.prisma.account.findMany({
+				where: { userId },
+				select: selectedData,
+				skip,
+				take,
+			}),
+			this.prisma.account.count({ where: { userId } }),
+		]);
 	}
 
 	findById(id: string) {

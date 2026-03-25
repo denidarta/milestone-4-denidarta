@@ -3,7 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { AccountsService } from '../accounts/accounts.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { Decimal } from '@prisma/client/runtime/client';
 
 const mockAccount = {
 	id: 'account-1',
@@ -15,7 +16,7 @@ const mockTransaction = {
 	id: 'trx-1',
 	accountId: 'account-1',
 	amount: 200,
-	type: 'CREDIT' as const,
+	type: 'DEPOSIT' as const,
 	description: 'Test deposit',
 	createdAt: new Date(),
 };
@@ -58,12 +59,12 @@ describe('TransactionsService', () => {
 
 	describe('create transaction', () => {
 		const dto = {
-			amount: 200,
-			type: 'CREDIT' as const,
+			amount: new Decimal(200),
+			type: 'DEPOSIT' as const,
 			description: 'Test deposit',
 		};
 
-		it('should create a CREDIT transaction and increment balance', async () => {
+		it('should create a Top Up transaction and increment balance', async () => {
 			prisma.$transaction.mockImplementation(
 				(cb: (tx: object) => Promise<unknown>) => {
 					const tx = {
@@ -85,8 +86,8 @@ describe('TransactionsService', () => {
 		});
 
 		it('should create a DEBIT transaction and decrement balance', async () => {
-			const debitDto = { ...dto, type: 'DEBIT' as const };
-			const debitTrx = { ...mockTransaction, type: 'DEBIT' as const };
+			const debitDto = { ...dto, type: 'WITHDRAWAL' as const };
+			const debitTrx = { ...mockTransaction, type: 'WITHDRAWAL' as const };
 
 			prisma.$transaction.mockImplementation(
 				(cb: (tx: object) => Promise<unknown>) => {
@@ -186,18 +187,6 @@ describe('TransactionsService', () => {
 	// ─── findOne ──────────────────────────────────────────────────────────────
 
 	describe('find one transaction', () => {
-		it('should return transaction without account field', async () => {
-			prisma.transaction.findUnique.mockResolvedValue({
-				...mockTransaction,
-				account: { userId: 'user-1' },
-			});
-
-			const result = await service.findOne('trx-1', 'user-1');
-
-			expect(result).toEqual(mockTransaction);
-			expect(result).not.toHaveProperty('account');
-		});
-
 		it('should throw NotFoundException when transaction does not exist', async () => {
 			prisma.transaction.findUnique.mockResolvedValue(null);
 

@@ -3,12 +3,16 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { AccountsRepository } from './accounts.repository';
 import { CreateAccountDto } from './dto/create-account.dto';
 
 @Injectable()
 export class AccountsService {
-	constructor(private prisma: PrismaService) {}
+	constructor(
+		private prisma: PrismaService,
+		private accountsRepository: AccountsRepository
+	) {}
 
 	async create(userId: string, dto: CreateAccountDto) {
 		let accountNumber: number;
@@ -26,10 +30,11 @@ export class AccountsService {
 
 	async findAll(userId: string, page = 1, limit = 20) {
 		const skip = (page - 1) * limit;
-		const [data, total] = await Promise.all([
-			this.prisma.account.findMany({ where: { userId }, skip, take: limit }),
-			this.prisma.account.count({ where: { userId } }),
-		]);
+		const [data, total] = await this.accountsRepository.findAllByUser(
+			userId,
+			skip,
+			limit
+		);
 		return { data, total, page, limit };
 	}
 

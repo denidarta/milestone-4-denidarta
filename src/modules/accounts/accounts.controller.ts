@@ -12,6 +12,8 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/types/UserResponse';
 
 @UseGuards(JwtAuthGuard)
 @Controller('accounts')
@@ -19,30 +21,30 @@ export class AccountsController {
 	constructor(private accounts: AccountsService) {}
 
 	@Post()
-	create(@Request() req: any, @Body() dto: CreateAccountDto) {
-		return this.accounts.create(req.user.userId, dto);
+	create(@CurrentUser() user: JwtPayload, @Body() dto: CreateAccountDto) {
+		return this.accounts.create(user.userId, dto);
 	}
 
 	@Get()
 	findAll(
-		@Request() req: any,
+		@CurrentUser() user: JwtPayload,
 		@Query('page') page?: string,
 		@Query('limit') limit?: string
 	) {
 		return this.accounts.findAll(
-			req.user.userId,
+			user.userId,
 			Number(page) || 1,
 			Number(limit) || 20
 		);
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: string, @Request() req: any) {
-		return this.accounts.findById(id, req.user.userId);
+	findOne(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+		return this.accounts.findById(id, user.userId);
 	}
 
 	@Delete(':id')
-	remove(@Param('id') id: string, @Request() req: any) {
-		return this.accounts.remove(id, req.user.userId);
+	remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+		return this.accounts.remove(id, user.userId);
 	}
 }

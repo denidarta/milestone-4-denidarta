@@ -33,9 +33,11 @@ export class AccountsService {
 		return { data, total, page, limit };
 	}
 
-	async findById(id: string) {
+	async findById(id: string, userId: string) {
 		const account = await this.prisma.account.findUnique({ where: { id } });
 		if (!account) throw new NotFoundException('Account not found');
+		if (account.userId !== userId)
+			throw new ForbiddenException('Access denied');
 		return account;
 	}
 
@@ -45,12 +47,12 @@ export class AccountsService {
 		});
 	}
 
-	async update(id: string) {
-		await this.findById(id);
+	async update(id: string, userId: string) {
+		await this.findById(id, userId);
 	}
 
-	async remove(id: string) {
-		await this.findById(id);
+	async remove(id: string, userId: string) {
+		await this.findById(id, userId);
 		return this.prisma.account.delete({ where: { id } });
 	}
 }

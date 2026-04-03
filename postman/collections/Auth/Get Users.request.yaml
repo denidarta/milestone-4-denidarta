@@ -1,0 +1,5 @@
+$kind: http-request
+url: http://localhost:3000/users
+method: GET
+examples: .resources/Get Users.resources/examples
+order: 2441971094102892

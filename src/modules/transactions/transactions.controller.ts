@@ -3,6 +3,7 @@ import {
 	Controller,
 	Get,
 	Param,
+	ParseIntPipe,
 	Post,
 	Query,
 	UseGuards,
@@ -22,9 +23,11 @@ export class TransactionsController {
 	constructor(private transactions: TransactionsService) {}
 
 	@Post('accounts/:accountId/transactions')
-	@ApiOperation({ summary: 'Create a transaction (deposit, withdrawal, transfer)' })
+	@ApiOperation({
+		summary: 'Create a transaction (deposit, withdrawal, transfer)',
+	})
 	create(
-		@Param('accountId') accountId: string,
+		@Param('accountId', ParseIntPipe) accountId: number,
 		@CurrentUser() user: JwtPayload,
 		@Body() dto: CreateTransactionDto
 	) {
@@ -34,7 +37,7 @@ export class TransactionsController {
 	@Get('accounts/:accountId/transactions')
 	@ApiOperation({ summary: 'Get all transactions for an account' })
 	findAll(
-		@Param('accountId') accountId: string,
+		@Param('accountId', ParseIntPipe) accountId: number,
 		@CurrentUser() user: JwtPayload,
 		@Query('page') page?: string,
 		@Query('limit') limit?: string
@@ -49,7 +52,10 @@ export class TransactionsController {
 
 	@Get('transactions/:id')
 	@ApiOperation({ summary: 'Get transaction by id' })
-	findOne(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+	findOne(
+		@Param('id', ParseIntPipe) id: number,
+		@CurrentUser() user: JwtPayload
+	) {
 		return this.transactions.findOne(id, user.userId);
 	}
 }

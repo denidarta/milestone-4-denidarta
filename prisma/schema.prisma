@@ -24,7 +24,7 @@ enum UserRole {
 }
 
 model User {
-  id        String    @id @default(uuid())
+  id        Int       @id @default(autoincrement())
   email     String    @unique
   password  String
   name      String
@@ -35,26 +35,26 @@ model User {
 }
 
 model Account {
-  id                   String        @id @default(uuid())
+  id                   Int           @id @default(autoincrement())
   accountNumber        Int           @unique
   status               AccountStatus @default(ACTIVE)
   balance              Decimal       @default(0) @db.Decimal(19, 4)
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
-  userId               String
+  userId               Int
   user                 User          @relation(fields: [userId], references: [id])
   outgoingTransactions Transaction[] @relation("SourceAccount")
   incomingTransactions Transaction[] @relation("DestinationAccount")
 }
 
 model Transaction {
-  id                   String          @id @default(uuid())
+  id                   Int             @id @default(autoincrement())
   amount               Decimal         @db.Decimal(19, 4)
   type                 TransactionType
   description          String?
   createdAt            DateTime        @default(now())
-  sourceAccountId      String? // nullable - not needed for CREDIT (WIHDRAWAL)
-  destinationAccountId String? // nullable — not needed for DEBIT (TOPUP)
+  sourceAccountId      Int? // nullable - not needed for CREDIT (WIHDRAWAL)
+  destinationAccountId Int? // nullable — not needed for DEBIT (TOPUP)
   sourceAccount        Account?        @relation("SourceAccount", fields: [sourceAccountId], references: [id], onDelete: Cascade)
   destinationAccount   Account?        @relation("DestinationAccount", fields: [destinationAccountId], references: [id], onDelete: SetNull)
 }

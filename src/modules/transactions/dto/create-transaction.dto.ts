@@ -3,7 +3,7 @@ import {
 	IsEnum,
 	IsNotEmpty,
 	IsOptional,
-	IsString,
+	IsNumber,
 	ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -23,17 +23,20 @@ export class CreateTransactionDto {
 
 	@ApiProperty({ example: 'Monthly salary', required: false })
 	@IsOptional()
-	@IsString()
 	description?: string;
 
-	@ApiProperty({ example: 'account-uuid', required: false })
+	@ApiProperty({ example: 1, required: false })
 	@IsOptional()
-	@IsString()
-	sourceAccountId?: string;
+	@IsNumber()
+	sourceAccountId?: number;
 
-	@ApiProperty({ example: 'account-uuid', required: false, description: 'Required for TRANSFER' })
+	@ApiProperty({
+		example: 2,
+		required: false,
+		description: 'Required for TRANSFER',
+	})
 	@ValidateIf((o: CreateTransactionDto) => o.type === TransactionType.TRANSFER)
 	@IsNotEmpty()
-	@IsString()
-	destinationAccountId?: string;
+	@IsNumber()
+	destinationAccountId?: number;
 }

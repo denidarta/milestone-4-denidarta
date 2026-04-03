@@ -1,3 +1,4 @@
+export { AccountStatus, TransactionType, UserRole } from '@prisma/client';
 import {
 	AccountStatus,
 	Prisma,
@@ -8,7 +9,7 @@ import {
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface JwtPayload {
-	userId: string;
+	userId: number;
 	email: string;
 	role: UserRole;
 }
@@ -24,7 +25,7 @@ export class ApiResponse<T> {
 // ─── User ────────────────────────────────────────────────────────────────────
 
 export interface UserEntity {
-	id: string;
+	id: number;
 	name: string;
 	email: string;
 	createdAt: Date;
@@ -44,13 +45,13 @@ export interface UpdateUserData {
 // ─── Account ─────────────────────────────────────────────────────────────────
 
 export interface AccountEntity {
-	id: string;
+	id: number;
 	accountNumber: number;
 	status: AccountStatus;
 	balance: Prisma.Decimal;
 	createdAt: Date;
 	updatedAt: Date;
-	userId: string;
+	userId: number;
 }
 
 export interface UpdateAccountData {
@@ -60,13 +61,13 @@ export interface UpdateAccountData {
 // ─── Transaction ─────────────────────────────────────────────────────────────
 
 export interface TransactionEntity {
-	id: string;
+	id: number;
 	amount: Prisma.Decimal;
 	type: TransactionType;
 	description?: string | null;
 	createdAt: Date;
-	sourceAccountId?: string | null;
-	destinationAccountId?: string | null;
+	sourceAccountId?: number | null;
+	destinationAccountId?: number | null;
 }
 
 export interface PaginatedResult<T> {

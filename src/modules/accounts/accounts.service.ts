@@ -15,7 +15,7 @@ export class AccountsService {
 		private accountsRepository: AccountsRepository
 	) {}
 
-	async create(userId: string, dto: CreateAccountDto): Promise<AccountEntity> {
+	async create(userId: number, dto: CreateAccountDto): Promise<AccountEntity> {
 		let accountNumber: number;
 		let exist = true;
 		while (exist) {
@@ -30,7 +30,7 @@ export class AccountsService {
 	}
 
 	async findAll(
-		userId: string,
+		userId: number,
 		page = 1,
 		limit = 20
 	): Promise<PaginatedResult<AccountEntity>> {
@@ -43,7 +43,7 @@ export class AccountsService {
 		return { data, total, page, limit };
 	}
 
-	async findById(id: string, userId: string): Promise<AccountEntity> {
+	async findById(id: number, userId: number): Promise<AccountEntity> {
 		const account = await this.prisma.account.findUnique({ where: { id } });
 		if (!account) throw new NotFoundException('Account not found');
 		if (account.userId !== userId)
@@ -59,11 +59,11 @@ export class AccountsService {
 		});
 	}
 
-	async update(id: string, userId: string): Promise<void> {
+	async update(id: number, userId: number): Promise<void> {
 		await this.findById(id, userId);
 	}
 
-	async remove(id: string, userId: string): Promise<AccountEntity> {
+	async remove(id: number, userId: number): Promise<AccountEntity> {
 		await this.findById(id, userId);
 		return this.prisma.account.delete({ where: { id } });
 	}

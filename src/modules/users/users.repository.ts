@@ -5,8 +5,9 @@ import type {
 	UserEntity,
 	UserWithCredentials,
 } from 'src/types/index.type';
+import { UserRole } from '@prisma/client';
 
-const userSelect = {
+export const userSelect = {
 	id: true,
 	name: true,
 	email: true,
@@ -22,28 +23,31 @@ export class UsersRepository {
 		email: string;
 		password: string;
 		name: string;
-		role: import('@prisma/client').UserRole;
+		role: UserRole;
 	}) {
 		return this.prisma.user.create({ data });
 	}
 
 	findAll(): Promise<UserEntity[]> {
-		return this.prisma.user.findMany({ select: userSelect });
+		return this.prisma.user.findMany();
 	}
 
-	findById(id: string): Promise<UserEntity | null> {
-		return this.prisma.user.findUnique({ where: { id }, select: userSelect });
+	findById(id: number): Promise<UserEntity | null> {
+		return this.prisma.user.findUniqueOrThrow({
+			where: { id },
+			select: userSelect,
+		});
 	}
 
 	findByEmail(email: string): Promise<UserEntity | null> {
-		return this.prisma.user.findUnique({
+		return this.prisma.user.findUniqueOrThrow({
 			where: { email },
 			select: userSelect,
 		});
 	}
 
 	findByEmailWithPassword(email: string): Promise<UserWithCredentials | null> {
-		return this.prisma.user.findUnique({
+		return this.prisma.user.findUniqueOrThrow({
 			where: { email },
 			select: {
 				...userSelect,
@@ -53,11 +57,11 @@ export class UsersRepository {
 		});
 	}
 
-	update(id: string, data: UpdateUserData): Promise<UserEntity> {
+	update(id: number, data: UpdateUserData): Promise<UserEntity> {
 		return this.prisma.user.update({ where: { id }, data, select: userSelect });
 	}
 
-	delete(id: string): Promise<UserEntity> {
+	delete(id: number): Promise<UserEntity> {
 		return this.prisma.user.delete({ where: { id }, select: userSelect });
 	}
 }

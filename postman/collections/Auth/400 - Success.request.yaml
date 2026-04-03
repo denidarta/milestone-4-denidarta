@@ -1,0 +1,14 @@
+$kind: http-request
+url: http://localhost:3000/auth/register
+method: POST
+body:
+  type: json
+  content: |
+    {
+      "email": "deni@example.com",
+      "password": "secret123",
+      "name": "John Doe"
+    }
+auth:
+  type: noauth
+order: 533011863242

@@ -17,8 +17,8 @@ export class TransactionsService {
 	) {}
 
 	async create(
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		if (dto.type === TransactionType.DEPOSIT) {
@@ -32,8 +32,8 @@ export class TransactionsService {
 
 	private async findOwnedAccount(
 		tx: Prisma.TransactionClient,
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		label = 'Account'
 	) {
 		const account = await tx.account.findUnique({ where: { id: accountId } });
@@ -43,8 +43,8 @@ export class TransactionsService {
 	}
 
 	private async createDeposit(
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
@@ -67,8 +67,8 @@ export class TransactionsService {
 	}
 
 	private async createWithdrawal(
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
@@ -91,8 +91,8 @@ export class TransactionsService {
 	}
 
 	private async createTransfer(
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
@@ -126,8 +126,8 @@ export class TransactionsService {
 	}
 
 	async findAll(
-		accountId: string,
-		userId: string,
+		accountId: number,
+		userId: number,
 		page = 1,
 		limit = 20
 	): Promise<PaginatedResult<TransactionEntity>> {
@@ -148,7 +148,7 @@ export class TransactionsService {
 		return { data, total, page, limit };
 	}
 
-	async findOne(id: string, userId: string): Promise<TransactionEntity> {
+	async findOne(id: number, userId: number): Promise<TransactionEntity> {
 		const transaction = await this.prisma.transaction.findUnique({
 			where: { id },
 			include: {

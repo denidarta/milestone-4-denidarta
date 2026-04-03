@@ -4,6 +4,7 @@ import {
 	Delete,
 	Get,
 	Param,
+	ParseIntPipe,
 	Post,
 	Query,
 	Request,
@@ -45,13 +46,19 @@ export class AccountsController {
 
 	@Get(':id')
 	@ApiOperation({ summary: 'Get account by id' })
-	findOne(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+	findOne(
+		@Param('id', ParseIntPipe) id: number,
+		@CurrentUser() user: JwtPayload
+	) {
 		return this.accounts.findById(id, user.userId);
 	}
 
 	@Delete(':id')
 	@ApiOperation({ summary: 'Delete account by id' })
-	remove(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+	remove(
+		@Param('id', ParseIntPipe) id: number,
+		@CurrentUser() user: JwtPayload
+	) {
 		return this.accounts.remove(id, user.userId);
 	}
 }

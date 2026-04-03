@@ -40,7 +40,7 @@ export class TransactionsRepository {
 	findAll(): Promise<TransactionEntity[]> {
 		return this.prisma.transaction.findMany();
 	}
-	findOne(id: string): Promise<TransactionEntity | null> {
+	findOne(id: number): Promise<TransactionEntity | null> {
 		return this.prisma.transaction.findUnique({ where: { id } });
 	}
 }

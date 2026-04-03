@@ -17,7 +17,7 @@ const selectedData = {
 export class AccountsRepository {
 	constructor(private prisma: PrismaService) {}
 
-	create(userId: string, dto: CreateAccountDto): Promise<AccountEntity> {
+	create(userId: number, dto: CreateAccountDto): Promise<AccountEntity> {
 		return this.prisma.account.create({
 			data: { ...dto, userId },
 			select: selectedData,
@@ -25,7 +25,7 @@ export class AccountsRepository {
 	}
 
 	findAllByUser(
-		userId: string,
+		userId: number,
 		skip: number,
 		take: number
 	): Promise<[AccountEntity[], number]> {
@@ -40,7 +40,7 @@ export class AccountsRepository {
 		]);
 	}
 
-	findById(id: string): Promise<AccountEntity | null> {
+	findById(id: number): Promise<AccountEntity | null> {
 		return this.prisma.account.findUnique({
 			where: { id },
 			select: selectedData,
@@ -59,7 +59,7 @@ export class AccountsRepository {
 		});
 	}
 
-	update(id: string, data: UpdateAccountData): Promise<AccountEntity> {
+	update(id: number, data: UpdateAccountData): Promise<AccountEntity> {
 		return this.prisma.account.update({
 			where: { id },
 			data,
@@ -67,7 +67,7 @@ export class AccountsRepository {
 		});
 	}
 
-	delete(id: string): Promise<AccountEntity> {
+	delete(id: number): Promise<AccountEntity> {
 		return this.prisma.account.delete({ where: { id }, select: selectedData });
 	}
 }

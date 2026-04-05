@@ -1,8 +1,35 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
+import 'dotenv/config';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
+
 async function main() {
 	const hashedPassword = await bcrypt.hash('password123', 10);
+
+	const emails = new Set<string>();
+	while (emails.size < 50) {
+		emails.add(faker.internet.email());
+	}
+
+	await prisma.user.createMany({
+		data: Array.from(emails).map((email) => ({
+			email,
+			password: hashedPassword,
+			name: faker.person.fullName(),
+			role: UserRole.USER,
+		})),
+	});
+
+	console.log('Seeded: 50 users with password "password123"');
 }
+
+main()
+	.catch((e) => {
+		console.error(e);
+		process.exit(1);
+	})
+	.finally(() => prisma.$disconnect());

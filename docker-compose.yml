@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: financial_db
+      POSTGRES_DB: revo_fin
     ports:
       - '5432:5432'
     volumes:
@@ -20,7 +20,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/financial_db
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/revo_fin
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       PORT: 3000

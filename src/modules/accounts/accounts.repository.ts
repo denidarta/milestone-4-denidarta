@@ -24,6 +24,10 @@ export class AccountsRepository {
 		});
 	}
 
+	findAll(): Promise<AccountEntity[]> {
+		return this.prisma.account.findMany();
+	}
+
 	findAllByUser(
 		userId: number,
 		skip: number,

@@ -1,0 +1,5 @@
+name: Dev
+values:
+  - key: Admintoken
+    value: ''
+    enabled: true

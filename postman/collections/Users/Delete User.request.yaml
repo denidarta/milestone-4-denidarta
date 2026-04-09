@@ -1,0 +1,5 @@
+$kind: http-request
+url: ""
+method: DELETE
+examples: .resources/Delete User.resources/examples
+order: 1692303674063431

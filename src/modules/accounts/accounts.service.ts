@@ -90,8 +90,8 @@ export class AccountsService {
 		return this.accountsRepository.update(id, data);
 	}
 
-	async remove(id: number, userId: number): Promise<AccountEntity> {
-		await this.findById(id, userId);
-		return this.prisma.account.delete({ where: { id } });
+	async remove(id: number, userId: number, role: UserRole): Promise<AccountEntity> {
+		await this.findById(id, userId, role);
+		return this.accountsRepository.delete(id);
 	}
 }

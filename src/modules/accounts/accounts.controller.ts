@@ -88,6 +88,6 @@ export class AccountsController {
 		@Param('id', ParseIntPipe) id: number,
 		@CurrentUser() user: JwtPayload
 	) {
-		return this.accounts.remove(id, user.userId);
+		return this.accounts.remove(id, user.userId, user.role);
 	}
 }

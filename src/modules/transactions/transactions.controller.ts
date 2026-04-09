@@ -46,7 +46,8 @@ export class TransactionsController {
 			accountId,
 			user.userId,
 			Number(page) || 1,
-			Number(limit) || 20
+			Number(limit) || 20,
+			user.role
 		);
 	}
 
@@ -56,6 +57,6 @@ export class TransactionsController {
 		@Param('id', ParseIntPipe) id: number,
 		@CurrentUser() user: JwtPayload
 	) {
-		return this.transactions.findOne(id, user.userId);
+		return this.transactions.findOne(id, user.userId, user.role);
 	}
 }

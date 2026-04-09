@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AccountsService } from '../accounts/accounts.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import type { PaginatedResult, TransactionEntity } from 'src/types/index.type';
+import { UserRole } from 'src/types/index.type';
 
 @Injectable()
 export class TransactionsService {
@@ -138,9 +139,10 @@ export class TransactionsService {
 		accountId: number,
 		userId: number,
 		page = 1,
-		limit = 20
+		limit = 20,
+		role?: UserRole
 	): Promise<PaginatedResult<TransactionEntity>> {
-		await this.accounts.findById(accountId, userId);
+		await this.accounts.findById(accountId, userId, role);
 		const skip = (page - 1) * limit;
 		const accountFilter = {
 			OR: [{ sourceAccountId: accountId }, { destinationAccountId: accountId }],
@@ -157,7 +159,7 @@ export class TransactionsService {
 		return { data, total, page, limit };
 	}
 
-	async findOne(id: number, userId: number): Promise<TransactionEntity> {
+	async findOne(id: number, userId: number, role?: UserRole): Promise<TransactionEntity> {
 		const transaction = await this.prisma.transaction.findUnique({
 			where: { id },
 			include: {
@@ -167,10 +169,12 @@ export class TransactionsService {
 		});
 		if (!transaction) throw new NotFoundException('Transaction not found');
 
-		const isOwner =
-			transaction.sourceAccount?.userId === userId ||
-			transaction.destinationAccount?.userId === userId;
-		if (!isOwner) throw new ForbiddenException();
+		if (role !== UserRole.ADMIN) {
+			const isOwner =
+				transaction.sourceAccount?.userId === userId ||
+				transaction.destinationAccount?.userId === userId;
+			if (!isOwner) throw new ForbiddenException();
+		}
 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { sourceAccount, destinationAccount, ...result } = transaction;

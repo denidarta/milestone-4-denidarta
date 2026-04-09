@@ -44,7 +44,7 @@ describe('UsersService', () => {
 			const result = await service.findById(1);
 
 			expect(result).toEqual(mockUser);
-			expect(repository.findById).toHaveBeenCalledWith('user-1');
+			expect(repository.findById).toHaveBeenCalledWith(1);
 		});
 
 		it('should throw NotFoundException when user not found', async () => {
@@ -61,9 +61,7 @@ describe('UsersService', () => {
 			const result = await service.findByEmail('john@example.com');
 
 			expect(result).toEqual({ email: mockUser.email });
-			expect(repository.findByEmail).toHaveBeenCalledWith({
-				where: { email: 'john@example.com' },
-			});
+			expect(repository.findByEmail).toHaveBeenCalledWith('john@example.com');
 		});
 
 		it('should throw NotFoundException when user not found', async () => {

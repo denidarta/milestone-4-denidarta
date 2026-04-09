@@ -4,7 +4,11 @@ import {
 	NotFoundException,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
-import type { UpdateUserData, UserEntity } from 'src/types/index.type';
+import type {
+	UpdateUserData,
+	UserEntity,
+	PaginatedResult,
+} from 'src/types/index.type';
 import { UserRole } from 'src/types/index.type';
 import { RegisterDto } from 'src/modules/auth/dto/register.dto';
 import * as bcrypt from 'bcrypt';
@@ -30,8 +34,13 @@ export class UsersService {
 		return result;
 	}
 
-	findAll(): Promise<UserEntity[]> {
-		return this.usersRepository.findAll();
+	async findAll(page = 1, limit = 20): Promise<PaginatedResult<UserEntity>> {
+		const skip = (page - 1) * limit;
+		const [data, total] = await Promise.all([
+			this.usersRepository.findAll(skip, limit),
+			this.usersRepository.count(),
+		]);
+		return { data, total, page, limit };
 	}
 
 	async findById(id: number): Promise<UserEntity> {
@@ -50,6 +59,7 @@ export class UsersService {
 		return { email: user.email };
 	}
 
+	// UPDATE -----------
 	async update(id: number, data: UpdateUserData): Promise<UserEntity> {
 		await this.findById(id);
 		return this.usersRepository.update(id, data);

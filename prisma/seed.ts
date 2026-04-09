@@ -10,6 +10,21 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
 	const hashedPassword = await bcrypt.hash('password123', 10);
 
+	// Seed admin user
+	await prisma.user.upsert({
+		where: { email: 'admin@example.com' },
+		update: {},
+		create: {
+			email: 'admin@example.com',
+			password: hashedPassword,
+			name: 'Admin',
+			role: UserRole.ADMIN,
+		},
+	});
+
+	console.log('Seeded: admin@example.com / password123');
+
+	// Seed 50 regular users
 	const emails = new Set<string>();
 	while (emails.size < 50) {
 		emails.add(faker.internet.email());
@@ -22,6 +37,7 @@ async function main() {
 			name: faker.person.fullName(),
 			role: UserRole.USER,
 		})),
+		skipDuplicates: true,
 	});
 
 	console.log('Seeded: 50 users with password "password123"');

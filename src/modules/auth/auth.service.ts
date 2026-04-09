@@ -29,7 +29,7 @@ export class AuthService {
 			role: UserRole.USER,
 		});
 
-		return this.signToken(user.id, user.email);
+		return this.signToken(user.id, user.email, UserRole.USER);
 	}
 
 	async login(dto: LoginDto) {
@@ -39,14 +39,15 @@ export class AuthService {
 		const valid = await bcrypt.compare(dto.password, user.password);
 		if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-		return this.signToken(user.id, user.email);
+		return this.signToken(user.id, user.email, user.role);
 	}
 
 	private async signToken(
 		userId: number,
-		email: string
+		email: string,
+		role: UserRole
 	): Promise<{ access_token: string }> {
-		const access_token = await this.jwt.signAsync({ sub: userId, email });
+		const access_token = await this.jwt.signAsync({ sub: userId, email, role });
 		return { access_token };
 	}
 }

@@ -28,8 +28,12 @@ export class UsersRepository {
 		return this.prisma.user.create({ data });
 	}
 
-	findAll(): Promise<UserEntity[]> {
-		return this.prisma.user.findMany();
+	findAll(skip: number, take: number): Promise<UserEntity[]> {
+		return this.prisma.user.findMany({ select: userSelect, skip, take });
+	}
+
+	count(): Promise<number> {
+		return this.prisma.user.count();
 	}
 
 	findById(id: number): Promise<UserEntity | null> {

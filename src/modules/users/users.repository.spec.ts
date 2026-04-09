@@ -5,8 +5,6 @@ import { mockPrismaService } from '../../prisma/__mocks__/prisma.service';
 import { UserRole } from '@prisma/client';
 import { userSelect } from './users.repository';
 
-jest.mock('../../prisma/prisma.service');
-
 const mockUser = {
 	id: 1,
 	name: 'John Doe',
@@ -21,13 +19,15 @@ const mockUserWithCredentials = {
 	role: UserRole.USER,
 };
 
-
 describe('UsersRepository', () => {
 	let repository: UsersRepository;
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
-			providers: [UsersRepository, PrismaService],
+			providers: [
+				UsersRepository,
+				{ provide: PrismaService, useValue: mockPrismaService },
+			],
 		}).compile();
 
 		repository = module.get<UsersRepository>(UsersRepository);
@@ -36,7 +36,7 @@ describe('UsersRepository', () => {
 	afterEach(() => jest.clearAllMocks());
 
 	describe('create', () => {
-		it('should call mockPrismaService.user.create with correct data', async () => {
+		it('should call prisma.user.create with correct data', async () => {
 			mockPrismaService.user.create.mockResolvedValue(mockUserWithCredentials);
 
 			const dto = {
@@ -57,7 +57,7 @@ describe('UsersRepository', () => {
 		it('should return all users', async () => {
 			mockPrismaService.user.findMany.mockResolvedValue([mockUser]);
 
-			const result = await repository.findAll();
+			const result = await repository.findAll(0, 20);
 
 			expect(result).toEqual([mockUser]);
 			expect(mockPrismaService.user.findMany).toHaveBeenCalled();
@@ -79,7 +79,7 @@ describe('UsersRepository', () => {
 
 		it('should throw when user not found', async () => {
 			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found')
+				new Error('Not found'),
 			);
 
 			await expect(repository.findById(99)).rejects.toThrow('Not found');
@@ -101,17 +101,17 @@ describe('UsersRepository', () => {
 
 		it('should throw when email not found', async () => {
 			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found')
+				new Error('Not found'),
 			);
 
 			await expect(repository.findByEmail('ghost@mail.com')).rejects.toThrow(
-				'Not found'
+				'Not found',
 			);
 		});
 	});
 
 	describe('update', () => {
-		it('should call mockPrismaService.user.update with correct args', async () => {
+		it('should call prisma.user.update with correct args', async () => {
 			const updated = { ...mockUser, name: 'Jane Doe' };
 			mockPrismaService.user.update.mockResolvedValue(updated);
 
@@ -127,7 +127,7 @@ describe('UsersRepository', () => {
 	});
 
 	describe('delete', () => {
-		it('should call mockPrismaService.user.delete with correct id', async () => {
+		it('should call prisma.user.delete with correct id', async () => {
 			mockPrismaService.user.delete.mockResolvedValue(mockUser);
 
 			const result = await repository.delete(1);

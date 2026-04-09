@@ -8,6 +8,7 @@ import {
 	ParseIntPipe,
 	Patch,
 	Post,
+	Query,
 	Request,
 	UseGuards,
 } from '@nestjs/common';
@@ -42,12 +43,16 @@ export class UsersController {
 	@UseGuards(JwtAuthGuard)
 	@Get()
 	@ApiOperation({ summary: 'Get all users (Admin only)' })
-	findAll(@Request() req: { user: { role: UserRole } }) {
+	findAll(
+		@Request() req: { user: { role: UserRole } },
+		@Query('page', new ParseIntPipe({ optional: true })) page = 1,
+		@Query('limit', new ParseIntPipe({ optional: true })) limit = 20
+	) {
 		if (req.user.role !== UserRole.ADMIN)
 			throw new ForbiddenException(
 				'You are not allowed to perform this action!'
 			);
-		return this.users.findAll();
+		return this.users.findAll(page, limit);
 	}
 
 	@UseGuards(JwtAuthGuard)

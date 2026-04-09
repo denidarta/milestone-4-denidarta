@@ -7,7 +7,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { mockPrismaService } from '../../prisma/__mocks__/prisma.service';
 import { Decimal } from '@prisma/client/runtime/client';
 
-jest.mock('../../prisma/prisma.service');
 
 const mockAccount = {
 	id: 1,
@@ -37,7 +36,7 @@ describe('TransactionsService', () => {
 		const module: TestingModule = await Test.createTestingModule({
 			providers: [
 				TransactionsService,
-				PrismaService,
+				{ provide: PrismaService, useValue: mockPrismaService },
 				{ provide: AccountsService, useValue: mockAccountsService },
 			],
 		}).compile();
@@ -189,7 +188,8 @@ describe('TransactionsService', () => {
 		it('should throw ForbiddenException when transaction belongs to another user', async () => {
 			mockPrismaService.transaction.findUnique.mockResolvedValue({
 				...mockTransaction,
-				account: { userId: 2 },
+				sourceAccount: { userId: 2 },
+				destinationAccount: { userId: 2 },
 			});
 
 			await expect(service.findOne(1, 1)).rejects.toThrow(

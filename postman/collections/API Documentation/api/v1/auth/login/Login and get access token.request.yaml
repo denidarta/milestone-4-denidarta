@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "john@example.com",
+      "password": "Password@123"
+    }
+examples: ./.resources/Login and get access token.resources/examples
+order: 1000

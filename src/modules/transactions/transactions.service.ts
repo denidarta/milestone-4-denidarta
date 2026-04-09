@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	ForbiddenException,
 	Injectable,
 	NotFoundException,
@@ -72,7 +73,11 @@ export class TransactionsService {
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
-			await this.findOwnedAccount(tx, accountId, userId);
+			const account = await this.findOwnedAccount(tx, accountId, userId);
+
+			if (new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))) {
+				throw new BadRequestException('Insufficient balance');
+			}
 
 			const transaction = await tx.transaction.create({
 				data: {
@@ -96,7 +101,11 @@ export class TransactionsService {
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
-			await this.findOwnedAccount(tx, accountId, userId, 'Source account');
+			const sourceAccount = await this.findOwnedAccount(tx, accountId, userId, 'Source account');
+
+			if (new Prisma.Decimal(sourceAccount.balance).lt(new Prisma.Decimal(dto.amount))) {
+				throw new BadRequestException('Insufficient balance');
+			}
 
 			const destinationAccount = await tx.account.findUnique({
 				where: { id: dto.destinationAccountId },

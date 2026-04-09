@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/transactions/:id"
+method: GET
+pathVariables:
+  id: "9046.563391912932"
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Get transaction by id.resources/examples
+order: 1000

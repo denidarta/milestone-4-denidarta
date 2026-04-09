@@ -3,3 +3,6 @@ values:
   - key: Admintoken
     value: ''
     enabled: true
+  - key: url
+    value: ''
+    enabled: true

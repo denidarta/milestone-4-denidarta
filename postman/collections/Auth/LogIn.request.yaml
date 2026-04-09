@@ -1,4 +1,5 @@
 $kind: http-request
+name: LogIn
 url: http://localhost:3000/api/v1/auth/login
 method: POST
 body:
@@ -8,5 +9,11 @@ body:
       "email": "admin@example.com",
       "password": "password123"
     }
+scripts:
+  - type: afterResponse
+    code: |-
+      const token = pm.response.json().access_token;
+      pm.environment.set("Admintoken", token);
+    language: text/javascript
 examples: .resources/LogIn.resources/examples
 order: 1775640858159

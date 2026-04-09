@@ -1,0 +1,29 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/accounts/:accountId/transactions"
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+    - key: Authorization
+      value: Bearer <token>
+      description: "Added as a part of security scheme: bearer"
+  pathVariables:
+    accountId: "9046.563391912932"
+  body:
+    type: json
+    content: |-
+      {
+        "amount": {},
+        "type": "DEPOSIT",
+        "description": "Monthly salary",
+        "sourceAccountId": 1,
+        "destinationAccountId": 2
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  body:
+    type: text
+    content: ""
+order: 1000

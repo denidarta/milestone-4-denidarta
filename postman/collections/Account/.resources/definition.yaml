@@ -1,0 +1,8 @@
+$kind: collection
+name: Account
+auth:
+  - id: 1cf3a3cb-f6dd-4d2e-8f2d-43988c41abcf
+    type: bearer
+    name: Bearer Token
+    credentials:
+      token: "{{Admintoken}}"

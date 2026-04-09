@@ -1,0 +1,11 @@
+$kind: http-request
+name: Get all account
+description: Gett all acounts (can only be done by admin)
+url: http://localhost:3000/api/v1/accounts/
+method: GET
+auth:
+  credentials:
+    - key: token
+      value: "{{Admintoken}}"
+  type: bearer
+order: 4027425566332174

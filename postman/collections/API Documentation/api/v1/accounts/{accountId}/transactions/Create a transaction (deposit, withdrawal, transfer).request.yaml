@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/accounts/:accountId/transactions"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  accountId: "9046.563391912932"
+body:
+  type: json
+  content: |-
+    {
+      "amount": {},
+      "type": "DEPOSIT",
+      "description": "Monthly salary",
+      "sourceAccountId": 1,
+      "destinationAccountId": 2
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Create a transaction (deposit, withdrawal,
+  transfer).resources/examples
+order: 1000

@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{url}}/api/v1/users/4"
+method: DELETE
+auth:
+  type: bearer
+  credentials:
+    token: "{{Admintoken}}"
+order: 3702868299425067

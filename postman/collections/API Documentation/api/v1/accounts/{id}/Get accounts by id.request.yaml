@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/accounts/:id"
+method: GET
+pathVariables:
+  id: "9046.563391912932"
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Get accounts by id.resources/examples
+order: 1000

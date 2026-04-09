@@ -1,0 +1,8 @@
+$kind: http-request
+description: Gett all acounts (can only be done by admin)
+url: http://localhost:3000/api/v1/accounts/:id
+method: GET
+pathVariables:
+  id: "1"
+examples: .resources/Find account by id.resources/examples
+order: 4392763184880881

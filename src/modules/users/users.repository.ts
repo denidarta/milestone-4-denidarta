@@ -37,21 +37,21 @@ export class UsersRepository {
 	}
 
 	findById(id: number): Promise<UserEntity | null> {
-		return this.prisma.user.findUniqueOrThrow({
+		return this.prisma.user.findUnique({
 			where: { id },
 			select: userSelect,
 		});
 	}
 
 	findByEmail(email: string): Promise<UserEntity | null> {
-		return this.prisma.user.findUniqueOrThrow({
+		return this.prisma.user.findUnique({
 			where: { email },
 			select: userSelect,
 		});
 	}
 
 	findByEmailWithPassword(email: string): Promise<UserWithCredentials | null> {
-		return this.prisma.user.findUniqueOrThrow({
+		return this.prisma.user.findUnique({
 			where: { email },
 			select: {
 				...userSelect,
@@ -65,7 +65,8 @@ export class UsersRepository {
 		return this.prisma.user.update({ where: { id }, data, select: userSelect });
 	}
 
-	delete(id: number): Promise<UserEntity> {
+	async delete(id: number): Promise<UserEntity> {
+		await this.prisma.account.deleteMany({ where: { userId: id } });
 		return this.prisma.user.delete({ where: { id }, select: userSelect });
 	}
 }

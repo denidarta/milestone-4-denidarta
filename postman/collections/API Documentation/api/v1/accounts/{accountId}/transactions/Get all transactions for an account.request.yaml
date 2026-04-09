@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/accounts/:accountId/transactions?page=string&limit=string"
+method: GET
+queryParams:
+  page: string
+  limit: string
+pathVariables:
+  accountId: "9046.563391912932"
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Get all transactions for an account.resources/examples
+order: 2000

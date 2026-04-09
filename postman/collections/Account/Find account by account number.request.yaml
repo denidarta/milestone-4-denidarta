@@ -1,0 +1,9 @@
+$kind: http-request
+name: Find account by account number
+description: Gett all acounts (can only be done by admin)
+url: http://localhost:3000/api/v1/accounts/lookup/:accountNumber
+method: GET
+pathVariables:
+  - key: accountNumber
+    value: "1831903123"
+order: 4434987333533449

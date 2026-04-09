@@ -13,6 +13,10 @@ const selectedData = {
 	userId: true,
 } as const;
 
+const selectedDataSafe = {
+	name: true,
+};
+
 @Injectable()
 export class AccountsRepository {
 	constructor(private prisma: PrismaService) {}
@@ -24,10 +28,14 @@ export class AccountsRepository {
 		});
 	}
 
-	findAll(): Promise<AccountEntity[]> {
-		return this.prisma.account.findMany();
+	findAll(skip: number, take: number): Promise<AccountEntity[]> {
+		return this.prisma.account.findMany({ select: selectedData, skip, take });
 	}
 
+	countAll(): Promise<number> {
+		return this.prisma.account.count();
+	}
+	// get all acount info owned by user
 	findAllByUser(
 		userId: number,
 		skip: number,
@@ -43,7 +51,7 @@ export class AccountsRepository {
 			this.prisma.account.count({ where: { userId } }),
 		]);
 	}
-
+	//get account info by account id
 	findById(id: number): Promise<AccountEntity | null> {
 		return this.prisma.account.findUnique({
 			where: { id },
@@ -51,13 +59,14 @@ export class AccountsRepository {
 		});
 	}
 
+	// get account info by account number
 	findByNumber(accountNumber: number) {
 		return this.prisma.account.findUnique({
 			where: { accountNumber },
 			select: {
 				accountNumber: true,
 				user: {
-					select: { name: true },
+					select: selectedDataSafe,
 				},
 			},
 		});

@@ -1,0 +1,15 @@
+$kind: http-request
+name: "Get all accounts (Admin: all users, User: own accounts)"
+url: "{{baseUrl}}/api/v1/accounts?page=string&limit=string&userId=string"
+method: GET
+queryParams:
+  page: string
+  limit: string
+  userId: string
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Get all accounts (Admin- all users, User- own
+  accounts).resources/examples
+order: 5000

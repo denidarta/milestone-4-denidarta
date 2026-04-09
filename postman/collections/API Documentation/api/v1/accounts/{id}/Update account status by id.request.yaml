@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/api/v1/accounts/:id"
+method: PATCH
+headers:
+  Content-Type: application/json
+pathVariables:
+  id: "9046.563391912932"
+body:
+  type: json
+  content: "{}"
+auth:
+  type: bearer
+  credentials:
+    token: "{{bearerToken}}"
+examples: ./.resources/Update account status by id.resources/examples
+order: 2000

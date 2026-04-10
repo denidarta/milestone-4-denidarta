@@ -6,23 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum AccountStatus {
-  ACTIVE
-  FROZEN
-  CLOSED
-}
-
-enum TransactionType {
-  TRANSFER
-  DEPOSIT
-  WITHDRAWAL
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
@@ -43,8 +26,8 @@ model Account {
   updatedAt            DateTime      @updatedAt
   userId               Int
   user                 User          @relation(fields: [userId], references: [id])
-  outgoingTransactions Transaction[] @relation("SourceAccount")
   incomingTransactions Transaction[] @relation("DestinationAccount")
+  outgoingTransactions Transaction[] @relation("SourceAccount")
 }
 
 model Transaction {
@@ -53,8 +36,25 @@ model Transaction {
   type                 TransactionType
   description          String?
   createdAt            DateTime        @default(now())
-  sourceAccountId      Int? // nullable - not needed for CREDIT (WIHDRAWAL)
-  destinationAccountId Int? // nullable — not needed for DEBIT (TOPUP)
+  sourceAccountId      Int?
+  destinationAccountId Int?
+  destinationAccount   Account?        @relation("DestinationAccount", fields: [destinationAccountId], references: [id])
   sourceAccount        Account?        @relation("SourceAccount", fields: [sourceAccountId], references: [id], onDelete: Cascade)
-  destinationAccount   Account?        @relation("DestinationAccount", fields: [destinationAccountId], references: [id], onDelete: SetNull)
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum TransactionType {
+  TRANSFER
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

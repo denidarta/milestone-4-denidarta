@@ -40,17 +40,23 @@ describe('Transactions (e2e)', () => {
 		prisma = app.get(PrismaService);
 		await app.init();
 
-		await request(app.getHttpServer() as Parameters<typeof request>[0]).post('/auth/register').send({
-			email: 'tx@example.com',
-			password: 'password123',
-			name: 'TX User',
-		});
-		const loginRes = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		await request(app.getHttpServer() as Parameters<typeof request>[0])
+			.post('/auth/register')
+			.send({
+				email: 'tx@example.com',
+				password: 'password123',
+				name: 'TX User',
+			});
+		const loginRes = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/auth/login')
 			.send({ email: 'tx@example.com', password: 'password123' });
 		token = (loginRes.body as AuthResponse).access_token;
 
-		const accRes = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const accRes = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/accounts')
 			.set('Authorization', `Bearer ${token}`)
 			.send({ name: 'Savings', type: 'SAVINGS' });
@@ -65,7 +71,9 @@ describe('Transactions (e2e)', () => {
 	});
 
 	it('POST /accounts/:id/transactions - creates a CREDIT transaction and updates balance', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post(`/accounts/${accountId}/transactions`)
 			.set('Authorization', `Bearer ${token}`)
 			.send({
@@ -77,7 +85,9 @@ describe('Transactions (e2e)', () => {
 		expect((res.body as TransactionResponse).id).toBeDefined();
 		transactionId = (res.body as TransactionResponse).id;
 
-		const acc = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const acc = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(parseFloat((acc.body as AccountResponse).balance)).toBe(500);
@@ -89,22 +99,30 @@ describe('Transactions (e2e)', () => {
 			.set('Authorization', `Bearer ${token}`)
 			.send({ amount: '100.00', type: 'DEBIT' });
 
-		const acc = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const acc = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(parseFloat((acc.body as AccountResponse).balance)).toBe(400);
 	});
 
 	it('GET /accounts/:id/transactions - lists transactions (paginated)', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/accounts/${accountId}/transactions`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
-		expect((res.body as PaginatedResponse<TransactionResponse>).data).toHaveLength(2);
+		expect(
+			(res.body as PaginatedResponse<TransactionResponse>).data
+		).toHaveLength(2);
 	});
 
 	it('GET /transactions/:id - returns transaction detail', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/transactions/${transactionId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
@@ -112,24 +130,32 @@ describe('Transactions (e2e)', () => {
 	});
 
 	it('GET /transactions/:id - returns 404 for unknown id', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get('/transactions/nonexistent-id')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(404);
 	});
 
 	it('GET /transactions/:id - returns 403 for transaction owned by another user', async () => {
-		await request(app.getHttpServer() as Parameters<typeof request>[0]).post('/auth/register').send({
-			email: 'txother@example.com',
-			password: 'password123',
-			name: 'Other User',
-		});
-		const otherRes = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		await request(app.getHttpServer() as Parameters<typeof request>[0])
+			.post('/auth/register')
+			.send({
+				email: 'txother@example.com',
+				password: 'password123',
+				name: 'Other User',
+			});
+		const otherRes = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/auth/login')
 			.send({ email: 'txother@example.com', password: 'password123' });
 		const otherToken = (otherRes.body as AuthResponse).access_token;
 
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/transactions/${transactionId}`)
 			.set('Authorization', `Bearer ${otherToken}`);
 		expect(res.status).toBe(403);

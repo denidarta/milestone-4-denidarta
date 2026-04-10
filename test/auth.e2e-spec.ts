@@ -37,7 +37,9 @@ describe('Auth (e2e)', () => {
 
 	describe('POST /auth/register', () => {
 		it('should register a new user and return a token', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/register')
 				.send({
 					email: 'test@example.com',
@@ -49,7 +51,9 @@ describe('Auth (e2e)', () => {
 		});
 
 		it('should return 409 for duplicate email', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/register')
 				.send({
 					email: 'test@example.com',
@@ -60,7 +64,9 @@ describe('Auth (e2e)', () => {
 		});
 
 		it('should return 400 for invalid payload', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/register')
 				.send({ email: 'not-an-email' });
 			expect(res.status).toBe(400);
@@ -69,7 +75,9 @@ describe('Auth (e2e)', () => {
 
 	describe('POST /auth/login', () => {
 		it('should login and return a token', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/login')
 				.send({ email: 'test@example.com', password: 'password123' });
 			expect(res.status).toBe(200);
@@ -77,7 +85,9 @@ describe('Auth (e2e)', () => {
 		});
 
 		it('should return 401 for wrong password', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/login')
 				.send({ email: 'test@example.com', password: 'wrong' });
 			expect(res.status).toBe(401);
@@ -88,14 +98,18 @@ describe('Auth (e2e)', () => {
 		let token: string;
 
 		beforeAll(async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.post('/auth/login')
 				.send({ email: 'test@example.com', password: 'password123' });
 			token = (res.body as AuthResponse).access_token;
 		});
 
 		it('should return current user profile', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			)
 				.get('/users/me')
 				.set('Authorization', `Bearer ${token}`);
 			expect(res.status).toBe(200);
@@ -104,7 +118,9 @@ describe('Auth (e2e)', () => {
 		});
 
 		it('should return 401 without token', async () => {
-			const res = await request(app.getHttpServer() as Parameters<typeof request>[0]).get('/users/me');
+			const res = await request(
+				app.getHttpServer() as Parameters<typeof request>[0]
+			).get('/users/me');
 			expect(res.status).toBe(401);
 		});
 	});

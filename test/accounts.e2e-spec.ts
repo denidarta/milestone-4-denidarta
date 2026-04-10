@@ -36,12 +36,16 @@ describe('Accounts (e2e)', () => {
 		await app.init();
 
 		// Register and login
-		await request(app.getHttpServer() as Parameters<typeof request>[0]).post('/auth/register').send({
-			email: 'accounts@example.com',
-			password: 'password123',
-			name: 'Account User',
-		});
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		await request(app.getHttpServer() as Parameters<typeof request>[0])
+			.post('/auth/register')
+			.send({
+				email: 'accounts@example.com',
+				password: 'password123',
+				name: 'Account User',
+			});
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/auth/login')
 			.send({ email: 'accounts@example.com', password: 'password123' });
 		token = (res.body as AuthResponse).access_token;
@@ -53,7 +57,9 @@ describe('Accounts (e2e)', () => {
 	});
 
 	it('POST /accounts - creates an account', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/accounts')
 			.set('Authorization', `Bearer ${token}`)
 			.send({ name: 'My Checking', type: 'CHECKING' });
@@ -64,15 +70,21 @@ describe('Accounts (e2e)', () => {
 	});
 
 	it('GET /accounts - lists accounts for the user', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get('/accounts')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
-		expect((res.body as PaginatedResponse<AccountResponse>).data).toHaveLength(1);
+		expect((res.body as PaginatedResponse<AccountResponse>).data).toHaveLength(
+			1
+		);
 	});
 
 	it('GET /accounts/:id - returns account details', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
@@ -80,7 +92,9 @@ describe('Accounts (e2e)', () => {
 	});
 
 	it('GET /accounts/:id - returns 404 for unknown id', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get('/accounts/nonexistent-id')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(404);
@@ -88,24 +102,32 @@ describe('Accounts (e2e)', () => {
 
 	it('GET /accounts/:id - returns 403 for account owned by another user', async () => {
 		// Register a second user
-		await request(app.getHttpServer() as Parameters<typeof request>[0]).post('/auth/register').send({
-			email: 'other@example.com',
-			password: 'password123',
-			name: 'Other User',
-		});
-		const otherRes = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		await request(app.getHttpServer() as Parameters<typeof request>[0])
+			.post('/auth/register')
+			.send({
+				email: 'other@example.com',
+				password: 'password123',
+				name: 'Other User',
+			});
+		const otherRes = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.post('/auth/login')
 			.send({ email: 'other@example.com', password: 'password123' });
 		const otherToken = (otherRes.body as AuthResponse).access_token;
 
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.get(`/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${otherToken}`);
 		expect(res.status).toBe(403);
 	});
 
 	it('DELETE /accounts/:id - deletes the account', async () => {
-		const res = await request(app.getHttpServer() as Parameters<typeof request>[0])
+		const res = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
 			.delete(`/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);

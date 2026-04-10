@@ -79,7 +79,7 @@ describe('UsersRepository', () => {
 
 		it('should throw when user not found', async () => {
 			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found'),
+				new Error('Not found')
 			);
 
 			await expect(repository.findById(99)).rejects.toThrow('Not found');
@@ -101,11 +101,11 @@ describe('UsersRepository', () => {
 
 		it('should throw when email not found', async () => {
 			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found'),
+				new Error('Not found')
 			);
 
 			await expect(repository.findByEmail('ghost@mail.com')).rejects.toThrow(
-				'Not found',
+				'Not found'
 			);
 		});
 	});

@@ -90,7 +90,11 @@ export class AccountsService {
 		return this.accountsRepository.update(id, data);
 	}
 
-	async remove(id: number, userId: number, role: UserRole): Promise<AccountEntity> {
+	async remove(
+		id: number,
+		userId: number,
+		role: UserRole
+	): Promise<AccountEntity> {
 		await this.findById(id, userId, role);
 		return this.accountsRepository.delete(id);
 	}

@@ -7,7 +7,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { mockPrismaService } from '../../prisma/__mocks__/prisma.service';
 import { Decimal } from '@prisma/client/runtime/client';
 
-
 const mockAccount = {
 	id: 1,
 	userId: 1,
@@ -22,7 +21,6 @@ const mockTransaction = {
 	description: 'Test deposit',
 	createdAt: new Date(),
 };
-
 
 const mockAccountsService = {
 	findById: jest.fn(),
@@ -141,7 +139,9 @@ describe('TransactionsService', () => {
 	describe('find all transactions', () => {
 		it('should return paginated transactions', async () => {
 			accounts.findById.mockResolvedValue(mockAccount);
-			mockPrismaService.transaction.findMany.mockResolvedValue([mockTransaction]);
+			mockPrismaService.transaction.findMany.mockResolvedValue([
+				mockTransaction,
+			]);
 			mockPrismaService.transaction.count.mockResolvedValue(1);
 
 			const result = await service.findAll(1, 1, 1, 20);
@@ -170,9 +170,7 @@ describe('TransactionsService', () => {
 		it('should throw if account not found or not owned by user', async () => {
 			accounts.findById.mockRejectedValue(new NotFoundException());
 
-			await expect(service.findAll(1, 1)).rejects.toThrow(
-				NotFoundException
-			);
+			await expect(service.findAll(1, 1)).rejects.toThrow(NotFoundException);
 		});
 	});
 
@@ -180,9 +178,7 @@ describe('TransactionsService', () => {
 		it('should throw NotFoundException when transaction does not exist', async () => {
 			mockPrismaService.transaction.findUnique.mockResolvedValue(null);
 
-			await expect(service.findOne(99, 1)).rejects.toThrow(
-				NotFoundException
-			);
+			await expect(service.findOne(99, 1)).rejects.toThrow(NotFoundException);
 		});
 
 		it('should throw ForbiddenException when transaction belongs to another user', async () => {
@@ -192,9 +188,7 @@ describe('TransactionsService', () => {
 				destinationAccount: { userId: 2 },
 			});
 
-			await expect(service.findOne(1, 1)).rejects.toThrow(
-				ForbiddenException
-			);
+			await expect(service.findOne(1, 1)).rejects.toThrow(ForbiddenException);
 		});
 	});
 });

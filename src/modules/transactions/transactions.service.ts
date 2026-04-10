@@ -23,12 +23,13 @@ export class TransactionsService {
 		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
-		if (dto.type === TransactionType.DEPOSIT) {
-			return this.createDeposit(accountId, userId, dto);
-		} else if (dto.type === TransactionType.WITHDRAWAL) {
-			return this.createWithdrawal(accountId, userId, dto);
-		} else {
-			return this.createTransfer(accountId, userId, dto);
+		switch (dto.type) {
+			case TransactionType.DEPOSIT:
+				return this.createDeposit(accountId, userId, dto);
+			case TransactionType.WITHDRAWAL:
+				return this.createWithdrawal(accountId, userId, dto);
+			default:
+				return this.createTransfer(accountId, userId, dto);
 		}
 	}
 
@@ -39,7 +40,7 @@ export class TransactionsService {
 		label = 'Account'
 	) {
 		const account = await tx.account.findUnique({ where: { id: accountId } });
-		if (!account) throw new NotFoundException(`${label} not found`);
+		if (!account) throw new NotFoundException(`Akun ${label} tidak ditemukan`);
 		if (account.userId !== userId) throw new ForbiddenException();
 		return account;
 	}
@@ -76,7 +77,9 @@ export class TransactionsService {
 		return this.prisma.$transaction(async (tx) => {
 			const account = await this.findOwnedAccount(tx, accountId, userId);
 
-			if (new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))) {
+			if (
+				new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))
+			) {
 				throw new BadRequestException('Insufficient balance');
 			}
 
@@ -102,9 +105,18 @@ export class TransactionsService {
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		return this.prisma.$transaction(async (tx) => {
-			const sourceAccount = await this.findOwnedAccount(tx, accountId, userId, 'Source account');
+			const sourceAccount = await this.findOwnedAccount(
+				tx,
+				accountId,
+				userId,
+				'Source account'
+			);
 
-			if (new Prisma.Decimal(sourceAccount.balance).lt(new Prisma.Decimal(dto.amount))) {
+			if (
+				new Prisma.Decimal(sourceAccount.balance).lt(
+					new Prisma.Decimal(dto.amount)
+				)
+			) {
 				throw new BadRequestException('Insufficient balance');
 			}
 
@@ -159,7 +171,11 @@ export class TransactionsService {
 		return { data, total, page, limit };
 	}
 
-	async findOne(id: number, userId: number, role?: UserRole): Promise<TransactionEntity> {
+	async findOne(
+		id: number,
+		userId: number,
+		role?: UserRole
+	): Promise<TransactionEntity> {
 		const transaction = await this.prisma.transaction.findUnique({
 			where: { id },
 			include: {

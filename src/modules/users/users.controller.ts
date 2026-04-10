@@ -53,6 +53,13 @@ export class UsersController {
 		return this.users.findById(req.user.userId);
 	}
 
+	@Get(':id')
+	@Roles(UserRole.ADMIN)
+	@ApiOperation({ summary: 'Get user by id (Admin only)' })
+	findOne(@Param('id', ParseIntPipe) id: number) {
+		return this.users.findById(id);
+	}
+
 	@Patch(':id')
 	@ApiOperation({ summary: 'Update user by id' })
 	update(

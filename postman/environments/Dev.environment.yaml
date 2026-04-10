@@ -3,6 +3,9 @@ values:
   - key: Admintoken
     value: ''
     enabled: true
-  - key: url
+  - key: basurl
+    value: ''
+    enabled: true
+  - key: accountId
     value: ''
     enabled: true

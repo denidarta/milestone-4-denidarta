@@ -6,6 +6,7 @@ import type {
 	UserWithCredentials,
 } from 'src/types/index.type';
 import { UserRole } from '@prisma/client';
+import { buildUserSearchWhere } from '../../common/helpers/search.helper';
 
 export const userSelect = {
 	id: true,
@@ -28,12 +29,14 @@ export class UsersRepository {
 		return this.prisma.user.create({ data });
 	}
 
-	findAll(skip: number, take: number): Promise<UserEntity[]> {
-		return this.prisma.user.findMany({ select: userSelect, skip, take });
+	findAll(skip: number, take: number, search?: string): Promise<UserEntity[]> {
+		const where = search ? buildUserSearchWhere(search) : undefined;
+		return this.prisma.user.findMany({ select: userSelect, skip, take, where });
 	}
 
-	count(): Promise<number> {
-		return this.prisma.user.count();
+	count(search?: string): Promise<number> {
+		const where = search ? buildUserSearchWhere(search) : undefined;
+		return this.prisma.user.count({ where });
 	}
 
 	findById(id: number): Promise<UserEntity | null> {

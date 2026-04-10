@@ -41,9 +41,10 @@ export class UsersController {
 	@ApiOperation({ summary: 'Get all users (Admin only)' })
 	findAll(
 		@Query('page', new ParseIntPipe({ optional: true })) page = 1,
-		@Query('limit', new ParseIntPipe({ optional: true })) limit = 20
+		@Query('limit', new ParseIntPipe({ optional: true })) limit = 20,
+		@Query('search') search?: string
 	) {
-		return this.users.findAll(page, limit);
+		return this.users.findAll(page, limit, search);
 	}
 
 	@Get('me')

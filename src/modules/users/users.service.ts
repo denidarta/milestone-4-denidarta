@@ -34,11 +34,11 @@ export class UsersService {
 		return result;
 	}
 
-	async findAll(page = 1, limit = 20): Promise<PaginatedResult<UserEntity>> {
+	async findAll(page = 1, limit = 20, search?: string): Promise<PaginatedResult<UserEntity>> {
 		const skip = (page - 1) * limit;
 		const [data, total] = await Promise.all([
-			this.usersRepository.findAll(skip, limit),
-			this.usersRepository.count(),
+			this.usersRepository.findAll(skip, limit, search),
+			this.usersRepository.count(search),
 		]);
 		return { data, total, page, limit };
 	}

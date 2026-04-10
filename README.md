@@ -2,6 +2,11 @@
 
 A secure and scalable banking API built with NestJS and Prisma for managing user accounts, transactions, and financial operations.
 
+## 🌐 Production
+
+- **Base URL**: https://revobank-app-production.up.railway.app
+- **Swagger Docs**: https://revobank-app-production.up.railway.app/api/docs
+
 ## 📋 Overview
 
 RevoBank is a backend banking system designed for both customers and administrators. The API enables secure account management, fund transfers, deposits, withdrawals, and comprehensive transaction tracking with JWT-based authentication and role-based access control.
@@ -43,21 +48,22 @@ RevoBank is a backend banking system designed for both customers and administrat
 
 ## 🛠 Technologies
 
-- **Framework**: [NestJS](https://nestjs.com/) 10.3.9
-- **ORM**: [Prisma](https://www.prisma.io/) 5.x
-- **Database**: PostgreSQL / MySQL / SQLite
+- **Framework**: [NestJS](https://nestjs.com/) v11
+- **ORM**: [Prisma](https://www.prisma.io/) v7
+- **Database**: PostgreSQL (hosted on [Supabase](https://supabase.com))
 - **Authentication**: JWT with @nestjs/jwt & passport-jwt
 - **Validation**: class-validator & class-transformer
 - **Testing**: Jest & Supertest (E2E)
 - **Documentation**: Swagger (@nestjs/swagger)
-- **Containerization**: Docker & Docker Compose
+- **Containerization**: Docker
+- **Deployment**: [Railway](https://railway.app) (Docker image via Docker Hub)
 - **Node.js**: v20+
 
 ## 📦 Installation
 
 ### Prerequisites
 - Node.js 20+ and npm
-- PostgreSQL / MySQL / SQLite
+- PostgreSQL database (or Supabase account)
 - Git
 
 ### Setup Steps
@@ -80,18 +86,15 @@ cp .env.example .env
 
 4. **Set up your database** in `.env`:
 ```env
-# PostgreSQL example
-DATABASE_URL="postgresql://user:password@localhost:5432/revobank"
+# Connect to Supabase via connection pooling
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-# MySQL example
-DATABASE_URL="mysql://user:password@localhost:3306/revobank"
-
-# SQLite example
-DATABASE_URL="file:./dev.db"
+# Direct connection (used for migrations)
+DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
 
 # JWT configuration
 JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
-JWT_EXPIRES_IN="24h"
+JWT_EXPIRES_IN="15m"
 
 # Server
 PORT=3000
@@ -102,7 +105,12 @@ PORT=3000
 npx prisma migrate dev
 ```
 
-6. **Seed database (optional)**
+6. **Generate Prisma Client**
+```bash
+npx prisma generate
+```
+
+7. **Seed database (optional)**
 ```bash
 npx prisma db seed
 ```
@@ -121,15 +129,11 @@ npm run build
 npm run start:prod
 ```
 
-### Using Docker Compose
-```bash
-docker-compose up -d
-```
-This starts both PostgreSQL and the NestJS application.
-
 ## 📚 API Documentation
 
-Interactive Swagger documentation available at: `http://localhost:3000/api/docs`
+Interactive Swagger documentation:
+- **Local**: `http://localhost:3000/api/docs`
+- **Production**: https://revobank-app-production.up.railway.app/api/docs
 
 ### Authentication Endpoints
 | Method | Endpoint | Description |
@@ -181,13 +185,6 @@ npm run test:e2e
 npm run test:cov
 ```
 
-Coverage includes:
-- Authentication (register, login, token validation)
-- User management (profile, CRUD)
-- Account operations (create, read, update, delete)
-- Transaction handling (deposit, withdraw, transfer, balance validation)
-- Authorization & error handling (401, 403, 404 responses)
-
 ## 📁 Project Structure
 
 ```
@@ -215,19 +212,19 @@ src/
 │   ├── guards/               # JWT & Role-based guards
 │   ├── decorators/           # Custom decorators (@Roles, @CurrentUser)
 │   └── utils/                # Helper functions
-├── prisma/
-│   ├── schema.prisma         # Database schema
-│   └── migrations/           # Migration files
-├── config/
-│   └── database.config.ts    # Database configuration
 └── main.ts                   # Application entry point
+prisma/
+├── schema.prisma             # Database schema
+├── migrations/               # Migration files
+└── seed.ts                   # Database seeder
+prisma.config.ts              # Prisma v7 configuration
 ```
 
 ## 🗄 Database Schema
 
 ### User
 ```
-- id: Int (PK)
+- id: Int (PK, autoincrement)
 - email: String (UNIQUE)
 - password: String (hashed)
 - name: String
@@ -237,8 +234,8 @@ src/
 
 ### Account
 ```
-- id: Int (PK)
-- accountNumber: String (UNIQUE)
+- id: Int (PK, autoincrement)
+- accountNumber: Int (UNIQUE)
 - status: AccountStatus (ACTIVE | FROZEN | CLOSED)
 - balance: Decimal(19,4)
 - userId: Int (FK)
@@ -247,7 +244,7 @@ src/
 
 ### Transaction
 ```
-- id: Int (PK)
+- id: Int (PK, autoincrement)
 - amount: Decimal(19,4)
 - type: TransactionType (DEPOSIT | WITHDRAWAL | TRANSFER)
 - description: String (nullable)
@@ -268,66 +265,36 @@ src/
 
 ## 🚢 Deployment
 
-### Docker Deployment
+This project is deployed on **Railway** using a Docker image hosted on Docker Hub.
+
+### Build & Push Docker Image
+
 ```bash
-# Build image
-docker build -t revobank .
-
-# Run with Docker Compose
-docker-compose up -d
-
-# View logs
-docker-compose logs -f app
+# Build for linux/amd64 (required for Railway) and push in one command
+docker buildx build --platform linux/amd64 -t denidarta/revobank:latest --push .
 ```
 
-### Cloud Deployment Options
+### Railway Environment Variables
 
-#### Render
-1. Push repository to GitHub
-2. Create new Web Service on [Render](https://render.com)
-3. Connect GitHub repository
-4. Set environment variables (DATABASE_URL, JWT_SECRET)
-5. Deploy
+Set these in your Railway service variables:
 
-#### Railway
-1. Connect GitHub repository to [Railway](https://railway.app)
-2. Add PostgreSQL plugin
-3. Set environment variables
-4. Deploy
-
-#### Fly.io
-```bash
-# Install Fly CLI
-curl -L https://fly.io/install.sh | sh
-
-# Deploy
-flyctl launch
-flyctl deploy
+```env
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.[project-ref]:[password]@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
+JWT_SECRET=your-secure-secret-key
+JWT_EXPIRES_IN=15m
+PORT=3000
 ```
 
 ## 📝 Environment Variables
 
-Create `.env` file in root directory:
-
-```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/revobank"
-
-# JWT Configuration
-JWT_SECRET="your-secure-secret-key-with-at-least-32-characters"
-JWT_EXPIRES_IN="24h"
-
-# Server
-PORT=3000
-NODE_ENV=development
-```
-
-## 🤝 Contributing
-
-1. Create a feature branch: `git checkout -b feature/YourFeature`
-2. Commit changes: `git commit -m 'Add YourFeature'`
-3. Push to branch: `git push origin feature/YourFeature`
-4. Open a Pull Request
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (pooled, for runtime) |
+| `DIRECT_URL` | PostgreSQL direct connection string (for migrations) |
+| `JWT_SECRET` | Secret key for JWT signing |
+| `JWT_EXPIRES_IN` | JWT token expiry (e.g. `15m`, `1h`) |
+| `PORT` | Server port (default: 3000) |
 
 ## 📄 License
 

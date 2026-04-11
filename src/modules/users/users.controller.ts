@@ -47,9 +47,9 @@ export class UsersController {
 		return this.users.findAll(page, limit, search);
 	}
 
-	@Get('me')
+	@Get('myprofile')
 	@ApiOperation({ summary: 'Get current logged in user' })
-	getMe(@Request() req: { user: { userId: number } }) {
+	getMyProfile(@Request() req: { user: { userId: number } }) {
 		return this.users.findById(req.user.userId);
 	}
 

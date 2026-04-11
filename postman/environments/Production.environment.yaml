@@ -1,0 +1,8 @@
+name: Production
+values:
+  - key: baseurl
+    value: ''
+    enabled: true
+  - key: bearertoken
+    value: ''
+    enabled: true

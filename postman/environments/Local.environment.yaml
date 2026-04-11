@@ -1,9 +1,9 @@
-name: Dev
+name: Local
 values:
   - key: Admintoken
     value: ''
     enabled: true
-  - key: basurl
+  - key: baseurl
     value: ''
     enabled: true
   - key: accountId

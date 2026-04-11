@@ -17,6 +17,7 @@ export const mockPrismaService = {
 		findUniqueOrThrow: jest.fn(),
 		update: jest.fn(),
 		delete: jest.fn(),
+		deleteMany: jest.fn(),
 	},
 	transaction: {
 		create: jest.fn(),

@@ -1,22 +1,19 @@
-// src/transactions/transactions.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
+import { TransactionsRepository } from './transactions.repository';
 import { AccountsService } from '../accounts/accounts.service';
-import { PrismaService } from '../../prisma/prisma.service';
-import { mockPrismaService } from '../../prisma/__mocks__/prisma.service';
 import { Decimal } from '@prisma/client/runtime/client';
 
 const mockAccount = {
 	id: 1,
 	userId: 1,
-	balance: 1000,
+	balance: new Decimal(1000),
 };
 
 const mockTransaction = {
 	id: 1,
-	accountId: 1,
-	amount: 200,
+	amount: new Decimal(200),
 	type: 'DEPOSIT' as const,
 	description: 'Test deposit',
 	createdAt: new Date(),
@@ -26,21 +23,32 @@ const mockAccountsService = {
 	findById: jest.fn(),
 };
 
+const mockTransactionsRepository = {
+	createDeposit: jest.fn(),
+	createWithdrawal: jest.fn(),
+	createTransfer: jest.fn(),
+	findAllByAccount: jest.fn(),
+	countByAccount: jest.fn(),
+	findOneWithAccounts: jest.fn(),
+};
+
 describe('TransactionsService', () => {
 	let service: TransactionsService;
 	let accounts: typeof mockAccountsService;
+	let repository: typeof mockTransactionsRepository;
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
 			providers: [
 				TransactionsService,
-				{ provide: PrismaService, useValue: mockPrismaService },
+				{ provide: TransactionsRepository, useValue: mockTransactionsRepository },
 				{ provide: AccountsService, useValue: mockAccountsService },
 			],
 		}).compile();
 
 		service = module.get<TransactionsService>(TransactionsService);
 		accounts = module.get(AccountsService);
+		repository = module.get(TransactionsRepository);
 	});
 
 	afterEach(() => jest.clearAllMocks());
@@ -54,83 +62,48 @@ describe('TransactionsService', () => {
 			description: 'Test deposit',
 		};
 
-		it('should create a Top Up transaction and increment balance', async () => {
-			mockPrismaService.$transaction.mockImplementation(
-				(cb: (tx: object) => Promise<unknown>) => {
-					const tx = {
-						account: {
-							findUnique: jest.fn().mockResolvedValue(mockAccount),
-							update: jest.fn().mockResolvedValue(undefined),
-						},
-						transaction: {
-							create: jest.fn().mockResolvedValue(mockTransaction),
-						},
-					};
-					return cb(tx);
-				}
-			);
+		it('should create a DEPOSIT transaction', async () => {
+			accounts.findById.mockResolvedValue(mockAccount);
+			repository.createDeposit.mockResolvedValue(mockTransaction);
 
 			const result = await service.create(1, 1, dto);
 
 			expect(result).toEqual(mockTransaction);
+			expect(repository.createDeposit).toHaveBeenCalledWith(1, dto);
 		});
 
-		it('should create a DEBIT transaction and decrement balance', async () => {
-			const debitDto = { ...dto, type: 'WITHDRAWAL' as const };
-			const debitTrx = { ...mockTransaction, type: 'WITHDRAWAL' as const };
+		it('should create a WITHDRAWAL transaction', async () => {
+			const withdrawalDto = { ...dto, type: 'WITHDRAWAL' as const };
+			const withdrawalTrx = { ...mockTransaction, type: 'WITHDRAWAL' as const };
 
-			mockPrismaService.$transaction.mockImplementation(
-				(cb: (tx: object) => Promise<unknown>) => {
-					const tx = {
-						account: {
-							findUnique: jest.fn().mockResolvedValue(mockAccount),
-							update: jest.fn().mockResolvedValue(undefined),
-						},
-						transaction: {
-							create: jest.fn().mockResolvedValue(debitTrx),
-						},
-					};
-					return cb(tx);
-				}
-			);
+			accounts.findById.mockResolvedValue(mockAccount);
+			repository.createWithdrawal.mockResolvedValue(withdrawalTrx);
 
-			const result = await service.create(1, 1, debitDto);
+			const result = await service.create(1, 1, withdrawalDto);
 
-			expect(result).toEqual(debitTrx);
+			expect(result).toEqual(withdrawalTrx);
+			expect(repository.createWithdrawal).toHaveBeenCalledWith(1, withdrawalDto);
+		});
+
+		it('should throw BadRequestException when balance is insufficient for withdrawal', async () => {
+			const lowBalanceAccount = { ...mockAccount, balance: new Decimal(10) };
+			accounts.findById.mockResolvedValue(lowBalanceAccount);
+
+			await expect(
+				service.create(1, 1, { ...dto, type: 'WITHDRAWAL' as const })
+			).rejects.toThrow(BadRequestException);
 		});
 
 		it('should throw NotFoundException when account does not exist', async () => {
-			mockPrismaService.$transaction.mockImplementation(
-				(cb: (tx: object) => Promise<unknown>) => {
-					const tx = {
-						account: { findUnique: jest.fn().mockResolvedValue(null) },
-					};
-					return cb(tx);
-				}
-			);
+			accounts.findById.mockRejectedValue(new NotFoundException());
 
-			await expect(service.create(1, 1, dto)).rejects.toThrow(
-				NotFoundException
-			);
+			await expect(service.create(1, 1, dto)).rejects.toThrow(NotFoundException);
 		});
 
 		it('should throw ForbiddenException when account belongs to another user', async () => {
-			const otherUserAccount = { ...mockAccount, userId: 2 };
+			accounts.findById.mockResolvedValue({ ...mockAccount, userId: 2 });
 
-			mockPrismaService.$transaction.mockImplementation(
-				(cb: (tx: object) => Promise<unknown>) => {
-					const tx = {
-						account: {
-							findUnique: jest.fn().mockResolvedValue(otherUserAccount),
-						},
-					};
-					return cb(tx);
-				}
-			);
-
-			await expect(service.create(1, 1, dto)).rejects.toThrow(
-				ForbiddenException
-			);
+			await expect(service.create(1, 1, dto)).rejects.toThrow(ForbiddenException);
 		});
 	});
 
@@ -139,10 +112,8 @@ describe('TransactionsService', () => {
 	describe('find all transactions', () => {
 		it('should return paginated transactions', async () => {
 			accounts.findById.mockResolvedValue(mockAccount);
-			mockPrismaService.transaction.findMany.mockResolvedValue([
-				mockTransaction,
-			]);
-			mockPrismaService.transaction.count.mockResolvedValue(1);
+			repository.findAllByAccount.mockResolvedValue([mockTransaction]);
+			repository.countByAccount.mockResolvedValue(1);
 
 			const result = await service.findAll(1, 1, 1, 20);
 
@@ -152,18 +123,20 @@ describe('TransactionsService', () => {
 				page: 1,
 				limit: 20,
 			});
-			expect(accounts.findById).toHaveBeenCalledWith(1, 1);
+			expect(accounts.findById).toHaveBeenCalledWith(1, 1, undefined);
 		});
 
 		it('should apply correct skip offset for page 2', async () => {
 			accounts.findById.mockResolvedValue(mockAccount);
-			mockPrismaService.transaction.findMany.mockResolvedValue([]);
-			mockPrismaService.transaction.count.mockResolvedValue(0);
+			repository.findAllByAccount.mockResolvedValue([]);
+			repository.countByAccount.mockResolvedValue(0);
 
 			await service.findAll(1, 1, 2, 10);
 
-			expect(mockPrismaService.transaction.findMany).toHaveBeenCalledWith(
-				expect.objectContaining({ skip: 10, take: 10 })
+			expect(repository.findAllByAccount).toHaveBeenCalledWith(
+				expect.any(Object),
+				10,
+				10
 			);
 		});
 
@@ -174,15 +147,17 @@ describe('TransactionsService', () => {
 		});
 	});
 
+	// ─── findOne ──────────────────────────────────────────────────────────────
+
 	describe('find one transaction', () => {
 		it('should throw NotFoundException when transaction does not exist', async () => {
-			mockPrismaService.transaction.findUnique.mockResolvedValue(null);
+			repository.findOneWithAccounts.mockResolvedValue(null);
 
 			await expect(service.findOne(99, 1)).rejects.toThrow(NotFoundException);
 		});
 
 		it('should throw ForbiddenException when transaction belongs to another user', async () => {
-			mockPrismaService.transaction.findUnique.mockResolvedValue({
+			repository.findOneWithAccounts.mockResolvedValue({
 				...mockTransaction,
 				sourceAccount: { userId: 2 },
 				destinationAccount: { userId: 2 },

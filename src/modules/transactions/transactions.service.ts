@@ -5,8 +5,8 @@ import {
 	NotFoundException,
 } from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
 import { AccountsService } from '../accounts/accounts.service';
+import { TransactionsRepository } from './transactions.repository';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import type { PaginatedResult, TransactionEntity } from 'src/types/index.type';
 import { UserRole } from 'src/types/index.type';
@@ -14,7 +14,7 @@ import { UserRole } from 'src/types/index.type';
 @Injectable()
 export class TransactionsService {
 	constructor(
-		private prisma: PrismaService,
+		private repository: TransactionsRepository,
 		private accounts: AccountsService
 	) {}
 
@@ -33,40 +33,15 @@ export class TransactionsService {
 		}
 	}
 
-	private async findOwnedAccount(
-		tx: Prisma.TransactionClient,
-		accountId: number,
-		userId: number,
-		label = 'Account'
-	) {
-		const account = await tx.account.findUnique({ where: { id: accountId } });
-		if (!account) throw new NotFoundException(`Akun ${label} tidak ditemukan`);
-		if (account.userId !== userId) throw new ForbiddenException();
-		return account;
-	}
-
 	private async createDeposit(
 		accountId: number,
 		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
-		return this.prisma.$transaction(async (tx) => {
-			await this.findOwnedAccount(tx, accountId, userId);
+		const account = await this.accounts.findById(accountId, userId);
+		if (account.userId !== userId) throw new ForbiddenException();
 
-			const transaction = await tx.transaction.create({
-				data: {
-					destinationAccountId: accountId,
-					amount: dto.amount,
-					type: dto.type,
-					description: dto.description,
-				},
-			});
-			await tx.account.update({
-				where: { id: accountId },
-				data: { balance: { increment: new Prisma.Decimal(dto.amount) } },
-			});
-			return transaction;
-		});
+		return this.repository.createDeposit(accountId, dto);
 	}
 
 	private async createWithdrawal(
@@ -74,29 +49,16 @@ export class TransactionsService {
 		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
-		return this.prisma.$transaction(async (tx) => {
-			const account = await this.findOwnedAccount(tx, accountId, userId);
+		const account = await this.accounts.findById(accountId, userId);
+		if (account.userId !== userId) throw new ForbiddenException();
 
-			if (
-				new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))
-			) {
-				throw new BadRequestException('Insufficient balance');
-			}
+		if (
+			new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))
+		) {
+			throw new BadRequestException('Insufficient balance');
+		}
 
-			const transaction = await tx.transaction.create({
-				data: {
-					sourceAccountId: accountId,
-					amount: dto.amount,
-					type: dto.type,
-					description: dto.description,
-				},
-			});
-			await tx.account.update({
-				where: { id: accountId },
-				data: { balance: { decrement: new Prisma.Decimal(dto.amount) } },
-			});
-			return transaction;
-		});
+		return this.repository.createWithdrawal(accountId, dto);
 	}
 
 	private async createTransfer(
@@ -104,47 +66,29 @@ export class TransactionsService {
 		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
-		return this.prisma.$transaction(async (tx) => {
-			const sourceAccount = await this.findOwnedAccount(
-				tx,
-				accountId,
-				userId,
-				'Source account'
-			);
+		const sourceAccount = await this.accounts.findById(accountId, userId);
+		if (sourceAccount.userId !== userId) throw new ForbiddenException();
 
-			if (
-				new Prisma.Decimal(sourceAccount.balance).lt(
-					new Prisma.Decimal(dto.amount)
-				)
-			) {
-				throw new BadRequestException('Insufficient balance');
-			}
+		if (
+			new Prisma.Decimal(sourceAccount.balance).lt(
+				new Prisma.Decimal(dto.amount)
+			)
+		) {
+			throw new BadRequestException('Insufficient balance');
+		}
 
-			const destinationAccount = await tx.account.findUnique({
-				where: { id: dto.destinationAccountId },
-			});
-			if (!destinationAccount)
-				throw new NotFoundException('Destination account not found');
+		const destinationAccount = await this.accounts.findById(
+			dto.destinationAccountId!,
+			userId
+		);
+		if (!destinationAccount)
+			throw new NotFoundException('Destination account not found');
 
-			const transaction = await tx.transaction.create({
-				data: {
-					sourceAccountId: accountId,
-					destinationAccountId: dto.destinationAccountId,
-					amount: dto.amount,
-					type: dto.type,
-					description: dto.description,
-				},
-			});
-			await tx.account.update({
-				where: { id: accountId },
-				data: { balance: { decrement: new Prisma.Decimal(dto.amount) } },
-			});
-			await tx.account.update({
-				where: { id: dto.destinationAccountId },
-				data: { balance: { increment: new Prisma.Decimal(dto.amount) } },
-			});
-			return transaction;
-		});
+		return this.repository.createTransfer(
+			accountId,
+			dto.destinationAccountId!,
+			dto
+		);
 	}
 
 	async findAll(
@@ -155,19 +99,20 @@ export class TransactionsService {
 		role?: UserRole
 	): Promise<PaginatedResult<TransactionEntity>> {
 		await this.accounts.findById(accountId, userId, role);
+
 		const skip = (page - 1) * limit;
-		const accountFilter = {
-			OR: [{ sourceAccountId: accountId }, { destinationAccountId: accountId }],
+		const filter = {
+			OR: [
+				{ sourceAccountId: accountId },
+				{ destinationAccountId: accountId },
+			] as [{ sourceAccountId: number }, { destinationAccountId: number }],
 		};
+
 		const [data, total] = await Promise.all([
-			this.prisma.transaction.findMany({
-				where: accountFilter,
-				skip,
-				take: limit,
-				orderBy: { createdAt: 'desc' },
-			}),
-			this.prisma.transaction.count({ where: accountFilter }),
+			this.repository.findAllByAccount(filter, skip, limit),
+			this.repository.countByAccount(filter),
 		]);
+
 		return { data, total, page, limit };
 	}
 
@@ -176,13 +121,7 @@ export class TransactionsService {
 		userId: number,
 		role?: UserRole
 	): Promise<TransactionEntity> {
-		const transaction = await this.prisma.transaction.findUnique({
-			where: { id },
-			include: {
-				sourceAccount: { select: { userId: true } },
-				destinationAccount: { select: { userId: true } },
-			},
-		});
+		const transaction = await this.repository.findOneWithAccounts(id);
 		if (!transaction) throw new NotFoundException('Transaction not found');
 
 		if (role !== UserRole.ADMIN) {

@@ -66,47 +66,45 @@ describe('UsersRepository', () => {
 
 	describe('findById', () => {
 		it('should return user when found', async () => {
-			mockPrismaService.user.findUniqueOrThrow.mockResolvedValue(mockUser);
+			mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await repository.findById(1);
 
 			expect(result).toEqual(mockUser);
-			expect(mockPrismaService.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
 				where: { id: 1 },
 				select: userSelect,
 			});
 		});
 
-		it('should throw when user not found', async () => {
-			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found')
-			);
+		it('should return null when user not found', async () => {
+			mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-			await expect(repository.findById(99)).rejects.toThrow('Not found');
+			const result = await repository.findById(99);
+
+			expect(result).toBeNull();
 		});
 	});
 
 	describe('findByEmail', () => {
 		it('should return user when found', async () => {
-			mockPrismaService.user.findUniqueOrThrow.mockResolvedValue(mockUser);
+			mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
 			const result = await repository.findByEmail('john@mail.com');
 
 			expect(result).toEqual(mockUser);
-			expect(mockPrismaService.user.findUniqueOrThrow).toHaveBeenCalledWith({
+			expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
 				where: { email: 'john@mail.com' },
 				select: userSelect,
 			});
 		});
 
-		it('should throw when email not found', async () => {
-			mockPrismaService.user.findUniqueOrThrow.mockRejectedValue(
-				new Error('Not found')
-			);
+		it('should return null when email not found', async () => {
+			mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-			await expect(repository.findByEmail('ghost@mail.com')).rejects.toThrow(
-				'Not found'
-			);
+			const result = await repository.findByEmail('ghost@mail.com');
+
+			expect(result).toBeNull();
 		});
 	});
 
@@ -128,11 +126,17 @@ describe('UsersRepository', () => {
 
 	describe('delete', () => {
 		it('should call prisma.user.delete with correct id', async () => {
+			(mockPrismaService.account.deleteMany as jest.Mock).mockResolvedValue({
+				count: 0,
+			});
 			mockPrismaService.user.delete.mockResolvedValue(mockUser);
 
 			const result = await repository.delete(1);
 
 			expect(result).toEqual(mockUser);
+			expect(mockPrismaService.account.deleteMany).toHaveBeenCalledWith({
+				where: { userId: 1 },
+			});
 			expect(mockPrismaService.user.delete).toHaveBeenCalledWith({
 				where: { id: 1 },
 				select: userSelect,

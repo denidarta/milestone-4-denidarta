@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersRepository } from './users.repository';
 
@@ -12,6 +12,7 @@ const mockUser = {
 };
 
 const mockUsersRepository = {
+	create: jest.fn(),
 	findById: jest.fn(),
 	findByEmail: jest.fn(),
 	findByAccountNumber: jest.fn(),
@@ -36,6 +37,31 @@ describe('UsersService', () => {
 	});
 
 	afterEach(() => jest.clearAllMocks());
+
+	describe('createAdmin', () => {
+		const dto = {
+			name: 'John Doe',
+			email: 'john@example.com',
+			password: 'Pass@123',
+		};
+
+		it('should create an admin user and return user without password', async () => {
+			repository.findByEmail.mockResolvedValue(null);
+			repository.create.mockResolvedValue({ ...mockUser, password: 'hashed', role: 'ADMIN' });
+
+			const result = await service.createAdmin(dto);
+
+			expect(result).not.toHaveProperty('password');
+			expect(repository.create).toHaveBeenCalled();
+		});
+
+		it('should throw ConflictException when email already in use', async () => {
+			repository.findByEmail.mockResolvedValue(mockUser);
+
+			await expect(service.createAdmin(dto)).rejects.toThrow(ConflictException);
+			expect(repository.create).not.toHaveBeenCalled();
+		});
+	});
 
 	describe('find user by user_id', () => {
 		it('should return user when found', async () => {
@@ -90,9 +116,9 @@ describe('UsersService', () => {
 		it('should throw NotFoundException if user does not exist', async () => {
 			repository.findById.mockResolvedValue(null);
 
-			await expect(
-				service.update('nonexistent', { name: 'X' })
-			).rejects.toThrow(NotFoundException);
+			await expect(service.update(88, { name: 'X' })).rejects.toThrow(
+				NotFoundException
+			);
 			expect(repository.update).not.toHaveBeenCalled();
 		});
 	});

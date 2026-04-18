@@ -4,12 +4,17 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
+import * as express from 'express';
+import { IncomingMessage, ServerResponse } from 'http';
 
 const server = express();
+let isBootstrapped = false;
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+	if (isBootstrapped) return;
+	const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+		logger: ['error', 'warn', 'log'],
+	});
 
 	app.setGlobalPrefix('api/v1');
 	app.use(helmet());
@@ -29,11 +34,16 @@ async function bootstrap() {
 	SwaggerModule.setup('api/docs', app, document);
 
 	await app.init();
+	isBootstrapped = true;
 }
 
-const bootstrapPromise = bootstrap();
-
-export default async (req: express.Request, res: express.Response) => {
-	await bootstrapPromise;
-	server(req, res);
+module.exports = async (req: IncomingMessage, res: ServerResponse) => {
+	try {
+		await bootstrap();
+		server(req as express.Request, res as express.Response);
+	} catch (err) {
+		console.error('Bootstrap error:', err);
+		res.statusCode = 500;
+		res.end(JSON.stringify({ error: String(err) }));
+	}
 };

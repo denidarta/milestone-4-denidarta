@@ -2,7 +2,6 @@ import {
 	Body,
 	Controller,
 	Delete,
-	ForbiddenException,
 	Get,
 	Param,
 	ParseIntPipe,
@@ -67,10 +66,7 @@ export class UsersController {
 		@Body() dto: UpdateUserDto,
 		@Request() req: { user: { userId: number; role: UserRole } }
 	) {
-		if (req.user.userId !== id && req.user.role !== UserRole.ADMIN) {
-			throw new ForbiddenException('Forbidden Access');
-		}
-		return this.users.update(id, dto);
+		return this.users.update(id, dto, req.user.userId, req.user.role);
 	}
 
 	@Delete(':id')

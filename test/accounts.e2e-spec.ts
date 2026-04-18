@@ -29,51 +29,51 @@ describe('Accounts (e2e)', () => {
 		}).compile();
 
 		app = moduleFixture.createNestApplication();
+		app.setGlobalPrefix('api/v1');
 		app.useGlobalPipes(
 			new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
 		);
 		prisma = app.get(PrismaService);
 		await app.init();
 
-		// Register and login
 		await request(app.getHttpServer() as Parameters<typeof request>[0])
-			.post('/auth/register')
+			.post('/api/v1/auth/register')
 			.send({
 				email: 'accounts@example.com',
-				password: 'password123',
+				password: 'Password@123',
 				name: 'Account User',
 			});
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/auth/login')
-			.send({ email: 'accounts@example.com', password: 'password123' });
+			.post('/api/v1/auth/login')
+			.send({ email: 'accounts@example.com', password: 'Password@123' });
 		token = (res.body as AuthResponse).access_token;
 	});
 
 	afterAll(async () => {
+		await prisma.account.deleteMany();
 		await prisma.user.deleteMany();
 		await app.close();
 	});
 
-	it('POST /accounts - creates an account', async () => {
+	it('POST /api/v1/accounts - creates an account', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/accounts')
-			.set('Authorization', `Bearer ${token}`)
-			.send({ name: 'My Checking', type: 'CHECKING' });
+			.post('/api/v1/accounts')
+			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(201);
 		expect((res.body as AccountResponse).id).toBeDefined();
-		expect((res.body as AccountResponse).balance).toBe('0');
+		expect(parseFloat((res.body as AccountResponse).balance)).toBe(0);
 		accountId = (res.body as AccountResponse).id;
 	});
 
-	it('GET /accounts - lists accounts for the user', async () => {
+	it('GET /api/v1/accounts - lists accounts for the user', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get('/accounts')
+			.get('/api/v1/accounts')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
 		expect((res.body as PaginatedResponse<AccountResponse>).data).toHaveLength(
@@ -81,54 +81,53 @@ describe('Accounts (e2e)', () => {
 		);
 	});
 
-	it('GET /accounts/:id - returns account details', async () => {
+	it('GET /api/v1/accounts/:id - returns account details', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/accounts/${accountId}`)
+			.get(`/api/v1/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
 		expect((res.body as AccountResponse).id).toBe(accountId);
 	});
 
-	it('GET /accounts/:id - returns 404 for unknown id', async () => {
+	it('GET /api/v1/accounts/:id - returns 404 for unknown id', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get('/accounts/nonexistent-id')
+			.get('/api/v1/accounts/999999')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(404);
 	});
 
-	it('GET /accounts/:id - returns 403 for account owned by another user', async () => {
-		// Register a second user
+	it('GET /api/v1/accounts/:id - returns 403 for account owned by another user', async () => {
 		await request(app.getHttpServer() as Parameters<typeof request>[0])
-			.post('/auth/register')
+			.post('/api/v1/auth/register')
 			.send({
 				email: 'other@example.com',
-				password: 'password123',
+				password: 'Password@123',
 				name: 'Other User',
 			});
 		const otherRes = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/auth/login')
-			.send({ email: 'other@example.com', password: 'password123' });
+			.post('/api/v1/auth/login')
+			.send({ email: 'other@example.com', password: 'Password@123' });
 		const otherToken = (otherRes.body as AuthResponse).access_token;
 
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/accounts/${accountId}`)
+			.get(`/api/v1/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${otherToken}`);
 		expect(res.status).toBe(403);
 	});
 
-	it('DELETE /accounts/:id - deletes the account', async () => {
+	it('DELETE /api/v1/accounts/:id - deletes the account', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.delete(`/accounts/${accountId}`)
+			.delete(`/api/v1/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
 	});

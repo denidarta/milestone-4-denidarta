@@ -13,8 +13,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AccountsService } from './accounts.service';
-import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/types/index.type';
 import { UserRole } from 'src/types/index.type';
@@ -27,9 +27,9 @@ export class AccountsController {
 	constructor(private accounts: AccountsService) {}
 
 	@Post()
-	@ApiOperation({ summary: 'Create a new account' })
-	create(@CurrentUser() user: JwtPayload, @Body() dto: CreateAccountDto) {
-		return this.accounts.create(user.userId, dto);
+	@ApiOperation({ summary: 'Create a new bank account' })
+	create(@CurrentUser() user: JwtPayload) {
+		return this.accounts.create(user.userId);
 	}
 
 	@Get()
@@ -38,20 +38,16 @@ export class AccountsController {
 	})
 	findAll(
 		@CurrentUser() user: JwtPayload,
-		@Query('page') page?: string,
-		@Query('limit') limit?: string,
+		@Query() { page, limit }: PaginationDto,
 		@Query('userId') userId?: string
 	) {
-		const p = Number(page) || 1;
-		const l = Number(limit) || 20;
-
 		if (user.role === UserRole.ADMIN) {
 			if (userId) {
-				return this.accounts.findAllByUser(Number(userId), p, l);
+				return this.accounts.findAllByUser(Number(userId), page, limit);
 			}
-			return this.accounts.findAll(p, l);
+			return this.accounts.findAll(page, limit);
 		}
-		return this.accounts.findAllByUser(user.userId, p, l);
+		return this.accounts.findAllByUser(user.userId, page, limit);
 	}
 
 	@Get('lookup/:accountNumber')

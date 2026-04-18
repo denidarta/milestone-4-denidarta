@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/types/index.type';
 
@@ -39,14 +40,13 @@ export class TransactionsController {
 	findAll(
 		@Param('accountId', ParseIntPipe) accountId: number,
 		@CurrentUser() user: JwtPayload,
-		@Query('page') page?: string,
-		@Query('limit') limit?: string
+		@Query() { page, limit }: PaginationDto
 	) {
 		return this.transactions.findAll(
 			accountId,
 			user.userId,
-			Number(page) || 1,
-			Number(limit) || 20,
+			page,
+			limit,
 			user.role
 		);
 	}

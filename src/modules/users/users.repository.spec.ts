@@ -126,7 +126,7 @@ describe('UsersRepository', () => {
 
 	describe('delete', () => {
 		it('should call prisma.user.delete with correct id', async () => {
-			(mockPrismaService.account.deleteMany as jest.Mock).mockResolvedValue({
+			mockPrismaService.account.deleteMany.mockResolvedValue({
 				count: 0,
 			});
 			mockPrismaService.user.delete.mockResolvedValue(mockUser);

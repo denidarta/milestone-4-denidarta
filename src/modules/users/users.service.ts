@@ -1,5 +1,6 @@
 import {
 	ConflictException,
+	ForbiddenException,
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
@@ -64,7 +65,15 @@ export class UsersService {
 	}
 
 	// UPDATE -----------
-	async update(id: number, data: UpdateUserData): Promise<UserEntity> {
+	async update(
+		id: number,
+		data: UpdateUserData,
+		requesterId: number,
+		requesterRole: UserRole
+	): Promise<UserEntity> {
+		if (requesterId !== id && requesterRole !== UserRole.ADMIN) {
+			throw new ForbiddenException('Forbidden Access');
+		}
 		await this.findById(id);
 		return this.usersRepository.update(id, data);
 	}

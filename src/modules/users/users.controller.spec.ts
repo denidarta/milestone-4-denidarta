@@ -52,7 +52,7 @@ describe('UsersController', () => {
 			expect(mockUsersService.createAdmin).toHaveBeenCalledWith(dto);
 		});
 
-it('should deny access when non-admin tries to create an admin user', async () => {
+		it('should deny access when non-admin tries to create an admin user', async () => {
 			const module: TestingModule = await Test.createTestingModule({
 				controllers: [UsersController],
 				providers: [{ provide: UsersService, useValue: mockUsersService }],
@@ -118,17 +118,22 @@ it('should deny access when non-admin tries to create an admin user', async () =
 			const result = await controller.update(1, { name: 'Updated' }, req);
 
 			expect(result).toEqual(updated);
-			expect(mockUsersService.update).toHaveBeenCalledWith(1, {
-				name: 'Updated',
-			});
+			expect(mockUsersService.update).toHaveBeenCalledWith(
+				1,
+				{ name: 'Updated' },
+				1,
+				UserRole.USER
+			);
 		});
 
-		it('should throw ForbiddenException when updating another user as non-admin', () => {
+		it('should throw ForbiddenException when updating another user as non-admin', async () => {
+			mockUsersService.update.mockRejectedValue(new ForbiddenException());
+
 			const req = { user: { userId: 2, role: UserRole.USER } };
 
-			expect(() => controller.update(1, { name: 'Hacker' }, req)).toThrow(
-				ForbiddenException
-			);
+			await expect(
+				controller.update(1, { name: 'Hacker' }, req)
+			).rejects.toThrow(ForbiddenException);
 		});
 	});
 
@@ -157,8 +162,6 @@ it('should deny access when non-admin tries to create an admin user', async () =
 
 			const app = module.createNestApplication();
 			await app.init();
-
-			const nonAdminController = module.get<UsersController>(UsersController);
 
 			// Guard blocks the request — controller method should never be reached
 			const canActivate = module.get(RolesGuard).canActivate({} as never);

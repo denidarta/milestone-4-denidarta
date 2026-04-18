@@ -23,6 +23,7 @@ describe('Auth (e2e)', () => {
 		}).compile();
 
 		app = moduleFixture.createNestApplication();
+		app.setGlobalPrefix('api/v1');
 		app.useGlobalPipes(
 			new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
 		);
@@ -35,15 +36,15 @@ describe('Auth (e2e)', () => {
 		await app.close();
 	});
 
-	describe('POST /auth/register', () => {
+	describe('POST /api/v1/auth/register', () => {
 		it('should register a new user and return a token', async () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/register')
+				.post('/api/v1/auth/register')
 				.send({
 					email: 'test@example.com',
-					password: 'password123',
+					password: 'Password@123',
 					name: 'Test User',
 				});
 			expect(res.status).toBe(201);
@@ -54,10 +55,10 @@ describe('Auth (e2e)', () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/register')
+				.post('/api/v1/auth/register')
 				.send({
 					email: 'test@example.com',
-					password: 'password123',
+					password: 'Password@123',
 					name: 'Test User',
 				});
 			expect(res.status).toBe(409);
@@ -67,19 +68,19 @@ describe('Auth (e2e)', () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/register')
+				.post('/api/v1/auth/register')
 				.send({ email: 'not-an-email' });
 			expect(res.status).toBe(400);
 		});
 	});
 
-	describe('POST /auth/login', () => {
+	describe('POST /api/v1/auth/login', () => {
 		it('should login and return a token', async () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/login')
-				.send({ email: 'test@example.com', password: 'password123' });
+				.post('/api/v1/auth/login')
+				.send({ email: 'test@example.com', password: 'Password@123' });
 			expect(res.status).toBe(200);
 			expect((res.body as AuthResponse).access_token).toBeDefined();
 		});
@@ -88,21 +89,21 @@ describe('Auth (e2e)', () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/login')
+				.post('/api/v1/auth/login')
 				.send({ email: 'test@example.com', password: 'wrong' });
 			expect(res.status).toBe(401);
 		});
 	});
 
-	describe('GET /users/me', () => {
+	describe('GET /api/v1/users/me', () => {
 		let token: string;
 
 		beforeAll(async () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.post('/auth/login')
-				.send({ email: 'test@example.com', password: 'password123' });
+				.post('/api/v1/auth/login')
+				.send({ email: 'test@example.com', password: 'Password@123' });
 			token = (res.body as AuthResponse).access_token;
 		});
 
@@ -110,7 +111,7 @@ describe('Auth (e2e)', () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
 			)
-				.get('/users/me')
+				.get('/api/v1/users/me')
 				.set('Authorization', `Bearer ${token}`);
 			expect(res.status).toBe(200);
 			expect((res.body as UserResponse).email).toBe('test@example.com');
@@ -120,7 +121,7 @@ describe('Auth (e2e)', () => {
 		it('should return 401 without token', async () => {
 			const res = await request(
 				app.getHttpServer() as Parameters<typeof request>[0]
-			).get('/users/me');
+			).get('/api/v1/users/me');
 			expect(res.status).toBe(401);
 		});
 	});

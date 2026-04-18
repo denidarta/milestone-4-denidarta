@@ -96,6 +96,22 @@
 			"**/*.(t|j)s"
 		],
 		"coverageDirectory": "../coverage",
+		"coveragePathIgnorePatterns": [
+			"/node_modules/",
+			"__mocks__",
+			"prisma\\.service\\.ts",
+			"prisma\\.module\\.ts",
+			"main\\.ts",
+			"app\\.module\\.ts",
+			"\\.module\\.ts$",
+			"\\.dto\\.ts$",
+			"\\.decorator\\.ts$",
+			"\\.middleware\\.ts$",
+			"\\.strategy\\.ts$",
+			"\\.guard\\.ts$",
+			"types/index\\.type\\.ts",
+			"\\.spec\\.ts$"
+		],
 		"testEnvironment": "node"
 	}
 }

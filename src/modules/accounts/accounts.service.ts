@@ -3,9 +3,7 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
 import { AccountsRepository } from './accounts.repository';
-import { CreateAccountDto } from './dto/create-account.dto';
 import type {
 	AccountEntity,
 	PaginatedResult,
@@ -15,23 +13,14 @@ import { UserRole } from 'src/types/index.type';
 
 @Injectable()
 export class AccountsService {
-	constructor(
-		private prisma: PrismaService,
-		private accountsRepository: AccountsRepository
-	) {}
+	constructor(private accountsRepository: AccountsRepository) {}
 
-	async create(userId: number, dto: CreateAccountDto): Promise<AccountEntity> {
-		let accountNumber: number;
-		let exist = true;
-		while (exist) {
+	async create(userId: number): Promise<AccountEntity> {
+		let accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
+		while (await this.accountsRepository.findByNumber(accountNumber)) {
 			accountNumber = Math.floor(1000000000 + Math.random() * 9000000000);
-			exist = !!(await this.prisma.account.findUnique({
-				where: { accountNumber },
-			}));
 		}
-		return this.prisma.account.create({
-			data: { ...dto, userId },
-		});
+		return this.accountsRepository.create(accountNumber, userId);
 	}
 
 	async findAll(page = 1, limit = 20): Promise<PaginatedResult<AccountEntity>> {
@@ -62,7 +51,7 @@ export class AccountsService {
 		userId: number,
 		role?: UserRole
 	): Promise<AccountEntity> {
-		const account = await this.prisma.account.findUnique({ where: { id } });
+		const account = await this.accountsRepository.findById(id);
 		if (!account) throw new NotFoundException('Account not found');
 		if (role !== UserRole.ADMIN && account.userId !== userId)
 			throw new ForbiddenException('Access denied');
@@ -81,12 +70,7 @@ export class AccountsService {
 		role: UserRole,
 		data: UpdateAccountData
 	): Promise<AccountEntity> {
-		if (role !== UserRole.ADMIN) {
-			await this.findById(id, userId);
-		} else {
-			const account = await this.prisma.account.findUnique({ where: { id } });
-			if (!account) throw new NotFoundException('Account not found');
-		}
+		await this.findById(id, userId, role);
 		return this.accountsRepository.update(id, data);
 	}
 

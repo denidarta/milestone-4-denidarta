@@ -15,6 +15,7 @@ export const mockPrismaService = {
 		findMany: jest.fn(),
 		findUnique: jest.fn(),
 		findUniqueOrThrow: jest.fn(),
+		count: jest.fn(),
 		update: jest.fn(),
 		delete: jest.fn(),
 		deleteMany: jest.fn(),

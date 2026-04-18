@@ -38,9 +38,7 @@ export class TransactionsService {
 		userId: number,
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
-		const account = await this.accounts.findById(accountId, userId);
-		if (account.userId !== userId) throw new ForbiddenException();
-
+		await this.accounts.findById(accountId, userId);
 		return this.repository.createDeposit(accountId, dto);
 	}
 
@@ -50,7 +48,6 @@ export class TransactionsService {
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		const account = await this.accounts.findById(accountId, userId);
-		if (account.userId !== userId) throw new ForbiddenException();
 
 		if (
 			new Prisma.Decimal(account.balance).lt(new Prisma.Decimal(dto.amount))
@@ -67,7 +64,6 @@ export class TransactionsService {
 		dto: CreateTransactionDto
 	): Promise<TransactionEntity> {
 		const sourceAccount = await this.accounts.findById(accountId, userId);
-		if (sourceAccount.userId !== userId) throw new ForbiddenException();
 
 		if (
 			new Prisma.Decimal(sourceAccount.balance).lt(
@@ -77,12 +73,12 @@ export class TransactionsService {
 			throw new BadRequestException('Insufficient balance');
 		}
 
-		const destinationAccount = await this.accounts.findById(
+		// destination ownership is not checked — any active account can receive a transfer
+		await this.accounts.findById(
 			dto.destinationAccountId!,
-			userId
+			userId,
+			UserRole.ADMIN
 		);
-		if (!destinationAccount)
-			throw new NotFoundException('Destination account not found');
 
 		return this.repository.createTransfer(
 			accountId,

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	ForbiddenException,
+	NotFoundException,
+} from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { TransactionsRepository } from './transactions.repository';
 import { AccountsService } from '../accounts/accounts.service';
@@ -41,7 +45,10 @@ describe('TransactionsService', () => {
 		const module: TestingModule = await Test.createTestingModule({
 			providers: [
 				TransactionsService,
-				{ provide: TransactionsRepository, useValue: mockTransactionsRepository },
+				{
+					provide: TransactionsRepository,
+					useValue: mockTransactionsRepository,
+				},
 				{ provide: AccountsService, useValue: mockAccountsService },
 			],
 		}).compile();
@@ -82,7 +89,10 @@ describe('TransactionsService', () => {
 			const result = await service.create(1, 1, withdrawalDto);
 
 			expect(result).toEqual(withdrawalTrx);
-			expect(repository.createWithdrawal).toHaveBeenCalledWith(1, withdrawalDto);
+			expect(repository.createWithdrawal).toHaveBeenCalledWith(
+				1,
+				withdrawalDto
+			);
 		});
 
 		it('should throw BadRequestException when balance is insufficient for withdrawal', async () => {
@@ -97,13 +107,17 @@ describe('TransactionsService', () => {
 		it('should throw NotFoundException when account does not exist', async () => {
 			accounts.findById.mockRejectedValue(new NotFoundException());
 
-			await expect(service.create(1, 1, dto)).rejects.toThrow(NotFoundException);
+			await expect(service.create(1, 1, dto)).rejects.toThrow(
+				NotFoundException
+			);
 		});
 
 		it('should throw ForbiddenException when account belongs to another user', async () => {
-			accounts.findById.mockResolvedValue({ ...mockAccount, userId: 2 });
+			accounts.findById.mockRejectedValue(new ForbiddenException());
 
-			await expect(service.create(1, 1, dto)).rejects.toThrow(ForbiddenException);
+			await expect(service.create(1, 1, dto)).rejects.toThrow(
+				ForbiddenException
+			);
 		});
 	});
 

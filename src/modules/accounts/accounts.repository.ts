@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateAccountDto } from './dto/create-account.dto';
 import type { AccountEntity, UpdateAccountData } from 'src/types/index.type';
 
 const selectedData = {
@@ -13,17 +12,13 @@ const selectedData = {
 	userId: true,
 } as const;
 
-const selectedDataSafe = {
-	name: true,
-};
-
 @Injectable()
 export class AccountsRepository {
 	constructor(private prisma: PrismaService) {}
 
-	create(userId: number, dto: CreateAccountDto): Promise<AccountEntity> {
+	create(accountNumber: number, userId: number): Promise<AccountEntity> {
 		return this.prisma.account.create({
-			data: { ...dto, userId },
+			data: { accountNumber, userId },
 			select: selectedData,
 		});
 	}
@@ -66,7 +61,7 @@ export class AccountsRepository {
 			select: {
 				accountNumber: true,
 				user: {
-					select: selectedDataSafe,
+					select: { name: true },
 				},
 			},
 		});

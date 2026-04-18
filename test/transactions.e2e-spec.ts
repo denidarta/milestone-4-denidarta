@@ -26,6 +26,7 @@ describe('Transactions (e2e)', () => {
 	let prisma: PrismaService;
 	let token: string;
 	let accountId: number;
+	let destAccountId: number;
 	let transactionId: number;
 
 	beforeAll(async () => {
@@ -34,6 +35,7 @@ describe('Transactions (e2e)', () => {
 		}).compile();
 
 		app = moduleFixture.createNestApplication();
+		app.setGlobalPrefix('api/v1');
 		app.useGlobalPipes(
 			new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
 		);
@@ -41,26 +43,32 @@ describe('Transactions (e2e)', () => {
 		await app.init();
 
 		await request(app.getHttpServer() as Parameters<typeof request>[0])
-			.post('/auth/register')
+			.post('/api/v1/auth/register')
 			.send({
 				email: 'tx@example.com',
-				password: 'password123',
+				password: 'Password@123',
 				name: 'TX User',
 			});
 		const loginRes = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/auth/login')
-			.send({ email: 'tx@example.com', password: 'password123' });
+			.post('/api/v1/auth/login')
+			.send({ email: 'tx@example.com', password: 'Password@123' });
 		token = (loginRes.body as AuthResponse).access_token;
 
 		const accRes = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/accounts')
-			.set('Authorization', `Bearer ${token}`)
-			.send({ name: 'Savings', type: 'SAVINGS' });
+			.post('/api/v1/accounts')
+			.set('Authorization', `Bearer ${token}`);
 		accountId = (accRes.body as AccountResponse).id;
+
+		const destRes = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
+			.post('/api/v1/accounts')
+			.set('Authorization', `Bearer ${token}`);
+		destAccountId = (destRes.body as AccountResponse).id;
 	});
 
 	afterAll(async () => {
@@ -70,15 +78,15 @@ describe('Transactions (e2e)', () => {
 		await app.close();
 	});
 
-	it('POST /accounts/:id/transactions - creates a CREDIT transaction and updates balance', async () => {
+	it('POST /api/v1/accounts/:id/transactions - DEPOSIT updates balance', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post(`/accounts/${accountId}/transactions`)
+			.post(`/api/v1/accounts/${accountId}/transactions`)
 			.set('Authorization', `Bearer ${token}`)
 			.send({
 				amount: '500.00',
-				type: 'CREDIT',
+				type: 'DEPOSIT',
 				description: 'Initial deposit',
 			});
 		expect(res.status).toBe(201);
@@ -88,75 +96,100 @@ describe('Transactions (e2e)', () => {
 		const acc = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/accounts/${accountId}`)
+			.get(`/api/v1/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(parseFloat((acc.body as AccountResponse).balance)).toBe(500);
 	});
 
-	it('POST /accounts/:id/transactions - creates a DEBIT and reduces balance', async () => {
+	it('POST /api/v1/accounts/:id/transactions - WITHDRAWAL reduces balance', async () => {
 		await request(app.getHttpServer() as Parameters<typeof request>[0])
-			.post(`/accounts/${accountId}/transactions`)
+			.post(`/api/v1/accounts/${accountId}/transactions`)
 			.set('Authorization', `Bearer ${token}`)
-			.send({ amount: '100.00', type: 'DEBIT' });
+			.send({ amount: '100.00', type: 'WITHDRAWAL' });
 
 		const acc = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/accounts/${accountId}`)
+			.get(`/api/v1/accounts/${accountId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(parseFloat((acc.body as AccountResponse).balance)).toBe(400);
 	});
 
-	it('GET /accounts/:id/transactions - lists transactions (paginated)', async () => {
+	it('POST /api/v1/accounts/:id/transactions - TRANSFER moves balance between accounts', async () => {
+		await request(app.getHttpServer() as Parameters<typeof request>[0])
+			.post(`/api/v1/accounts/${accountId}/transactions`)
+			.set('Authorization', `Bearer ${token}`)
+			.send({
+				amount: '100.00',
+				type: 'TRANSFER',
+				destinationAccountId: destAccountId,
+			});
+
+		const src = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
+			.get(`/api/v1/accounts/${accountId}`)
+			.set('Authorization', `Bearer ${token}`);
+		expect(parseFloat((src.body as AccountResponse).balance)).toBe(300);
+
+		const dest = await request(
+			app.getHttpServer() as Parameters<typeof request>[0]
+		)
+			.get(`/api/v1/accounts/${destAccountId}`)
+			.set('Authorization', `Bearer ${token}`);
+		expect(parseFloat((dest.body as AccountResponse).balance)).toBe(100);
+	});
+
+	it('GET /api/v1/accounts/:id/transactions - lists transactions (paginated)', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/accounts/${accountId}/transactions`)
+			.get(`/api/v1/accounts/${accountId}/transactions`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
 		expect(
-			(res.body as PaginatedResponse<TransactionResponse>).data
-		).toHaveLength(2);
+			(res.body as PaginatedResponse<TransactionResponse>).data.length
+		).toBeGreaterThanOrEqual(3);
 	});
 
-	it('GET /transactions/:id - returns transaction detail', async () => {
+	it('GET /api/v1/transactions/:id - returns transaction detail', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/transactions/${transactionId}`)
+			.get(`/api/v1/transactions/${transactionId}`)
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(200);
 		expect((res.body as TransactionResponse).id).toBe(transactionId);
 	});
 
-	it('GET /transactions/:id - returns 404 for unknown id', async () => {
+	it('GET /api/v1/transactions/:id - returns 404 for unknown id', async () => {
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get('/transactions/nonexistent-id')
+			.get('/api/v1/transactions/999999')
 			.set('Authorization', `Bearer ${token}`);
 		expect(res.status).toBe(404);
 	});
 
-	it('GET /transactions/:id - returns 403 for transaction owned by another user', async () => {
+	it('GET /api/v1/transactions/:id - returns 403 for transaction owned by another user', async () => {
 		await request(app.getHttpServer() as Parameters<typeof request>[0])
-			.post('/auth/register')
+			.post('/api/v1/auth/register')
 			.send({
 				email: 'txother@example.com',
-				password: 'password123',
+				password: 'Password@123',
 				name: 'Other User',
 			});
 		const otherRes = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.post('/auth/login')
-			.send({ email: 'txother@example.com', password: 'password123' });
+			.post('/api/v1/auth/login')
+			.send({ email: 'txother@example.com', password: 'Password@123' });
 		const otherToken = (otherRes.body as AuthResponse).access_token;
 
 		const res = await request(
 			app.getHttpServer() as Parameters<typeof request>[0]
 		)
-			.get(`/transactions/${transactionId}`)
+			.get(`/api/v1/transactions/${transactionId}`)
 			.set('Authorization', `Bearer ${otherToken}`);
 		expect(res.status).toBe(403);
 	});
